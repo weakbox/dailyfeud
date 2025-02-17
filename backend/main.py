@@ -3,6 +3,9 @@ from pydantic import BaseModel
 from thefuzz import process
 from answers import *
 
+class AnswerRequest(BaseModel):
+    question: str
+
 class GuessRequest(BaseModel):
     text: str
 
@@ -28,14 +31,19 @@ async def root():
         "creator": "Connor 'weakbox' McLeod"
     }
 
-@app.get("/test/")
-async def root():
-    question = "Name a team in the NBA."
-    response = generate_answer_set(question)
-    print(response)
-    return {
-        "test": response
+@app.post("/generate-answers/")
+async def generate_answers(q: AnswerRequest):
+    q = q.question.strip()
+    
+    response = {
+        "answers": None
     }
+
+    if not q:
+        return response
+
+    response["answers"] = generate_answer_set(q)
+    return response
 
 @app.post("/submit-guess/")
 async def submit_guess(guess: GuessRequest):
