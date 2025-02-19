@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from thefuzz import process
 from answers import *
+import database
 
 class AnswerRequest(BaseModel):
     question: str

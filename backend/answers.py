@@ -54,8 +54,6 @@ def generate_answer_set(question: str):
 
     model_response = response.choices[0].message.content
 
-    # Try to convert into a JSON object.
-    print("Debug:", model_response)
     try:
         answer_set = json.loads(model_response)
         return answer_set
