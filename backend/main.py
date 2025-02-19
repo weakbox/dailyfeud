@@ -7,7 +7,7 @@ class AnswerRequest(BaseModel):
     question: str
 
 class GuessRequest(BaseModel):
-    text: str
+    guess: str
 
 app = FastAPI()
 
@@ -32,22 +32,22 @@ async def root():
     }
 
 @app.post("/generate-answers/")
-async def generate_answers(q: AnswerRequest):
-    q = q.question.strip()
+async def generate_answers(request: AnswerRequest):
+    question = request.question.strip()
     
     response = {
         "answers": None
     }
 
-    if not q:
+    if not question:
         return response
 
-    response["answers"] = generate_answer_set(q)
+    response["answers"] = generate_answer_set(question)
     return response
 
 @app.post("/submit-guess/")
-async def submit_guess(guess: GuessRequest):
-    text = guess.text.strip().lower()
+async def submit_guess(request: GuessRequest):
+    guess = request.guess.strip().lower()
 
     response = {
         "correct_answer": None,
@@ -55,10 +55,10 @@ async def submit_guess(guess: GuessRequest):
         "message": "Please provide a valid guess!"
     }
 
-    if not text:
+    if not guess:
         return response
 
-    best_match, best_score = process.extractOne(text, ANSWER_SET_FLATTENED.keys())
+    best_match, best_score = process.extractOne(guess, ANSWER_SET_FLATTENED.keys())
     response["match_ratio"] = best_score
 
     if best_score >= THRESHOLD:
