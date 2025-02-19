@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from thefuzz import process
 from answers import *
-import database
+from database import *
 
 class AnswerRequest(BaseModel):
     question: str
@@ -11,6 +11,7 @@ class GuessRequest(BaseModel):
     guess: str
 
 app = FastAPI()
+initialize_database()
 
 # Template question for formatting purposes:
 QUESTION = "Name an object in your living room."
@@ -45,6 +46,10 @@ async def generate_answers(request: AnswerRequest):
 
     response["answers"] = generate_answer_set(question)
     return response
+
+@app.get("/get-answers/{question_id}")
+async def get_answers(question_id: int) -> dict:
+    return get_answer_set(question_id)
 
 @app.post("/submit-guess/")
 async def submit_guess(request: GuessRequest):
