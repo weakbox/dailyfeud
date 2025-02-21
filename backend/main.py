@@ -3,12 +3,7 @@ from pydantic import BaseModel
 from thefuzz import process
 from answers import *
 from database import *
-
-class AnswerRequest(BaseModel):
-    question: str
-
-class GuessRequest(BaseModel):
-    guess: str
+from models import QuestionRequest, GuessRequest, QuestionModel
 
 app = FastAPI()
 initialize_database()
@@ -29,27 +24,26 @@ THRESHOLD = 80  # It's currently pretty generous. Especially when including one 
 @app.get("/")
 async def root():
     return {
-        "message": "Hello! This is the DailyFeud backend.",
-        "creator": "Connor 'weakbox' McLeod"
+        "greeting": "Hello! This is the backend for DailyFeud.",
+        "creator": "Connor McLeod"
     }
 
-@app.post("/generate-answers/")
-async def generate_answers(request: AnswerRequest):
-    question = request.question.strip()
-    
-    response = {
-        "answers": None
-    }
+@app.post("/create-question/")
+async def create_question(request: QuestionRequest) -> QuestionModel:
+    """
+    Generates and stores a question based off of a given prompt.
+    """
+    prompt = request.prompt.strip()
+    question = generate_question(prompt)
+    store_question(question)
+    return question
 
-    if not question:
-        return response
-
-    response["answers"] = generate_answer_set(question)
-    return response
-
-@app.get("/get-answers/{question_id}")
-async def get_answers(question_id: int) -> dict:
-    return retrieve_answer_set(question_id)
+@app.get("/get-question/{id}")
+async def get_question(id: int) -> QuestionModel:
+    """
+    Retrieves a question from the database based off of its ID.
+    """
+    return retrieve_question(id)
 
 @app.post("/submit-guess/")
 async def submit_guess(request: GuessRequest):

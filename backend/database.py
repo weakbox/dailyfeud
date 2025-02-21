@@ -1,4 +1,6 @@
 import sqlite3
+from models import QuestionModel, AnswerModel
+from collections import defaultdict
 
 DATABASE_PATH = "database.db"
 
@@ -46,48 +48,51 @@ def initialize_database() -> None:
     # CREATE TABLE auto-commits.
     con.close()
 
-def store_question(question: dict) -> None:
+def store_question(question: QuestionModel) -> None:
     """
     Store a question, answers and synonyms in the database.
     """
     con = get_connection()
     cur = con.cursor()
 
-    cur.execute("INSERT INTO questions VALUES(NULL, ?)", (question,))
+    cur.execute("INSERT INTO questions VALUES(NULL, ?)", (question.question,))
     question_id = cur.lastrowid
 
-    for answer, synonyms in question:
-        points = 0
-        cur.execute("INSERT INTO answers VALUES(NULL, ?, ?, ?)", (question_id, answer, points))
+    for answer, answer_model in question.answers.items():
+        cur.execute("INSERT INTO answers VALUES(NULL, ?, ?, ?)", (question_id, answer, answer_model.value))
         answer_id = cur.lastrowid
 
-        for synonym in synonyms:
+        for synonym in answer_model.synonyms:
             cur.execute("INSERT INTO synonyms VALUES(NULL, ?, ?)", (answer_id, synonym))
 
     con.commit()
     con.close()
 
-def retrieve_answer_set(question_id: int) -> dict:
+def retrieve_question(id: int) -> QuestionModel:
     """
-    Retrieve a question, answers and synonyms in the database.
+    Retrieve a question, answers, and synonyms from the database.
     """
     con = get_connection()
     cur = con.cursor()
 
     cur.execute("""
-        SELECT answer, synonym 
-        FROM answers JOIN synonyms 
-        ON answers.id = synonyms.answer_id 
+        SELECT question, answer, synonym 
+        FROM questions 
+        JOIN answers
+          ON questions.id = answers.question_id
+        JOIN synonyms 
+          ON answers.id = synonyms.answer_id 
         WHERE question_id = ?
-        """, (question_id,))
+        """, (id,))
     
     results = cur.fetchall()
-
-    answer_set = {}
-    for answer, synonym in results:
-        if answer not in answer_set:
-            answer_set[answer] = set()
-        answer_set[answer].add(synonym)
     
+    question = results[0][0]
+    answers = defaultdict(lambda: AnswerModel(value=0, synonyms=[]))
+
+    for _, answer, synonym in results:
+        answers[answer].synonyms.append(synonym)
+
     con.close()
-    return answer_set
+
+    return QuestionModel(question=question, answers=answers)
