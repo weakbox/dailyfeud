@@ -1,14 +1,19 @@
 import sqlite3
-from answers import *
 
-DATABASE_PATH = "database2.db"
+DATABASE_PATH = "database.db"
 
 def get_connection():
+    """
+    Get a connection to the database and enable foreign key constraints.
+    """
     con = sqlite3.connect(DATABASE_PATH)
     con.execute("PRAGMA foreign_keys = 1")
     return con
 
 def initialize_database() -> None:
+    """
+    Initialize the database with the required tables if they don't already exist.
+    """
     con = get_connection()
     cur = con.cursor()
 
@@ -41,17 +46,17 @@ def initialize_database() -> None:
     # CREATE TABLE auto-commits.
     con.close()
 
-def insert_question(question: str) -> None:
-    answer_set = generate_answer_set(question)
-
-    # TODO: Add an error check if generation goes wrong.
+def store_question(question: dict) -> None:
+    """
+    Store a question, answers and synonyms in the database.
+    """
     con = get_connection()
     cur = con.cursor()
 
     cur.execute("INSERT INTO questions VALUES(NULL, ?)", (question,))
     question_id = cur.lastrowid
 
-    for answer, synonyms in answer_set.items():
+    for answer, synonyms in question:
         points = 0
         cur.execute("INSERT INTO answers VALUES(NULL, ?, ?, ?)", (question_id, answer, points))
         answer_id = cur.lastrowid
@@ -62,7 +67,10 @@ def insert_question(question: str) -> None:
     con.commit()
     con.close()
 
-def get_answer_set(question_id: int) -> dict:
+def retrieve_answer_set(question_id: int) -> dict:
+    """
+    Retrieve a question, answers and synonyms in the database.
+    """
     con = get_connection()
     cur = con.cursor()
 

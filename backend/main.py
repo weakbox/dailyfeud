@@ -49,7 +49,7 @@ async def generate_answers(request: AnswerRequest):
 
 @app.get("/get-answers/{question_id}")
 async def get_answers(question_id: int) -> dict:
-    return get_answer_set(question_id)
+    return retrieve_answer_set(question_id)
 
 @app.post("/submit-guess/")
 async def submit_guess(request: GuessRequest):
