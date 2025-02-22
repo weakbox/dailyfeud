@@ -96,3 +96,17 @@ def retrieve_question(id: int) -> QuestionModel:
     con.close()
 
     return QuestionModel(question=question, answers=answers)
+
+def retrieve_question_prompt(id: int) -> str:
+    """
+    Retrieve a question prompt from the database based off of the question's ID.
+    """
+    # Use a "with" statement here?
+    con = get_connection()
+    cur = con.cursor()
+
+    cur.execute("SELECT question FROM questions WHERE questions.id = ?", (id,))
+    result = cur.fetchone()
+    con.close()
+
+    return result[0] if result else ""

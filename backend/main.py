@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
 from thefuzz import process
 from answers import *
 from database import *
@@ -22,7 +21,7 @@ ANSWER_SET_FLATTENED = {synonym: key for key, synonyms in ANSWER_SET.items() for
 THRESHOLD = 80  # It's currently pretty generous. Especially when including one word in a multi-word answer (e.g. "coffee" -> "coffee table").
 
 @app.get("/")
-async def root():
+async def root() -> None:
     return {
         "greeting": "Hello! This is the backend for DailyFeud.",
         "creator": "Connor McLeod"
@@ -44,6 +43,13 @@ async def get_question(id: int) -> QuestionModel:
     Retrieves a question from the database based off of its ID.
     """
     return retrieve_question(id)
+
+@app.get("/get-question-prompt/{id}")
+async def get_question_prompt(id: int) -> str:
+    """
+    Retrieves the prompt of a question from the database based off of its ID.
+    """
+    return retrieve_question_prompt(id)
 
 @app.post("/submit-guess/")
 async def submit_guess(request: GuessRequest):
