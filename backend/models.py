@@ -5,6 +5,7 @@ class QuestionRequest(BaseModel):
     prompt: str
 
 class GuessRequest(BaseModel):
+    id: int
     guess: str
 
 class AnswerModel(BaseModel):
