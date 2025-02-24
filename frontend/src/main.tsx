@@ -11,6 +11,7 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <GamePage />,
+    errorElement: <div>404 Not Found. Bad address?</div>, /* Later on, put a Link component on this page to return to the home page. */
   },
   {
     path: "/level-select",
