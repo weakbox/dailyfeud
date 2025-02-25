@@ -1,5 +1,4 @@
 import { useParams, Link } from "react-router";
-import "./GamePlayPage.css";
 
 function GamePlayPage() {
   const params = useParams();

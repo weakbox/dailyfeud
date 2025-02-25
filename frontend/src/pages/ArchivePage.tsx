@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
 
-import "./ArchivePage.css";
-
 // Move to .env later on.
 const URL = "http://127.0.0.1:8000/get-all-question-prompts";
 
