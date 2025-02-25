@@ -1,6 +1,7 @@
 import sqlite3
 from models import QuestionModel, AnswerModel
 from collections import defaultdict
+from typing import List, Dict
 
 DATABASE_PATH = "database.db"
 
@@ -105,8 +106,31 @@ def retrieve_question_prompt(id: int) -> str:
     con = get_connection()
     cur = con.cursor()
 
-    cur.execute("SELECT question FROM questions WHERE questions.id = ?", (id,))
+    cur.execute("""
+                SELECT question FROM questions 
+                WHERE questions.id = ?
+                """, (id,))
     result = cur.fetchone()
     con.close()
 
     return result[0] if result else ""
+
+def retrieve_all_question_prompts() -> List[Dict[str, int | str]]:
+    """
+    Retrieve all question prompts from the database.
+    """
+    con = get_connection()
+    cur = con.cursor()
+
+    cur.execute("SELECT id, question FROM questions")
+    result = cur.fetchall()
+    con.close()
+
+    prompts = []
+    for row in result:
+        prompts.append({
+            "id": row[0],
+            "prompt": row[1]
+        })
+
+    return prompts

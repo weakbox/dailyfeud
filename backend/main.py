@@ -4,6 +4,7 @@ from answers import *
 from database import *
 from utils import flatten_answer_set
 from models import QuestionRequest, GuessRequest, QuestionModel
+from typing import List, Dict
 
 app = FastAPI()
 initialize_database()
@@ -40,6 +41,13 @@ async def get_question_prompt(id: int) -> str:
     Retrieves the prompt of a question from the database based off of its ID.
     """
     return retrieve_question_prompt(id)
+
+@app.get("/get-all-question-prompts/")
+async def get_all_question_prompts() -> List[Dict[str, int | str]]:
+    """
+    Retrieves the entire list of question prompts from the database.
+    """
+    return retrieve_all_question_prompts()
 
 @app.post("/submit-guess/")
 async def submit_guess(request: GuessRequest) -> dict:
