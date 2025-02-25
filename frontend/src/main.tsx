@@ -2,20 +2,26 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 
-import GamePage from "./pages/GamePage.tsx";
-import LevelSelectPage from "./pages/LevelSelectPage.tsx";
+import GamePlayPage from "./pages/GamePlayPage.tsx";
+import ArchivePage from "./pages/ArchivePage.tsx";
 
 import { createBrowserRouter, RouterProvider } from "react-router";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <GamePage />,
+    element: <div>Home Page - Not Implemented Yet!</div>,
     errorElement: <div>404 Not Found. Bad address?</div>, /* Later on, put a Link component on this page to return to the home page. */
   },
   {
-    path: "/level-select",
-    element: <LevelSelectPage />,
+    path: "/question/:questionId",
+    element: <GamePlayPage />,
+    errorElement: <div>404 Not Found. Bad address?</div>, /* Later on, put a Link component on this page to return to the home page. */
+  },
+  {
+    path: "/archive",
+    element: <ArchivePage />,
+    errorElement: <div>404 Not Found. Bad address?</div>, /* Later on, put a Link component on this page to return to the home page. */
   }
 ]);
 
