@@ -25,13 +25,17 @@ function ArchivePage() {
 
   return (
     <>
-      <h1>Question Archive</h1>
-      <div className="card">
-        <ul>
-          {prompts.map((p) => (
-            <Link key={p.id} to={`/question/${p.id}`}>{p.prompt}</Link>
-          ))}
-        </ul>
+      <h1 className="text-center font-bold text-4xl">QUESTION ARCHIVE</h1>
+      <div className="flex flex-col p-2 items-center w-full gap-2 bg-sky-400">
+        {prompts.map((p) => (
+          <Link 
+          key={p.id} 
+          to={`/question/${p.id}`}
+          className="block w-full bg-white px-2 py-1 font-bold border-4 border-black rounded-lg text-center"
+          >
+            {p.prompt.toUpperCase()}
+          </Link>
+        ))}
       </div>
     </>
   );
