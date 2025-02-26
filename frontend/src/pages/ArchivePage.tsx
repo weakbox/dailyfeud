@@ -11,7 +11,7 @@ type Prompt = {
 
 function ArchivePage() {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
-  
+
   // Can convert to a try/catch/await block later on.
   useEffect(() => {
     fetch(URL)
@@ -25,13 +25,13 @@ function ArchivePage() {
 
   return (
     <>
-      <h1 className="text-center font-bold text-4xl">QUESTION ARCHIVE</h1>
-      <div className="flex flex-col p-2 items-center w-full gap-2 bg-sky-400">
+      <h1 className="text-center text-4xl font-bold">QUESTION ARCHIVE</h1>
+      <div className="flex w-full flex-col items-center gap-2 bg-sky-400 p-2">
         {prompts.map((p) => (
-          <Link 
-          key={p.id} 
-          to={`/question/${p.id}`}
-          className="block w-full bg-white px-2 py-1 font-bold border-4 border-black rounded-lg text-center"
+          <Link
+            key={p.id}
+            to={`/question/${p.id}`}
+            className="block w-full rounded-lg border-4 border-black bg-white px-2 py-1 text-center font-bold"
           >
             {p.prompt.toUpperCase()}
           </Link>

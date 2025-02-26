@@ -11,18 +11,24 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <div>Home Page - Not Implemented Yet!</div>,
-    errorElement: <div>404 Not Found. Bad address?</div>, /* Later on, put a Link component on this page to return to the home page. */
+    errorElement: (
+      <div>404 Not Found. Bad address?</div>
+    ) /* Later on, put a Link component on this page to return to the home page. */,
   },
   {
-    path: "/question/:questionId",
+    path: "/question/:id",
     element: <GamePlayPage />,
-    errorElement: <div>404 Not Found. Bad address?</div>, /* Later on, put a Link component on this page to return to the home page. */
+    errorElement: (
+      <div>404 Not Found. Bad address?</div>
+    ) /* Later on, put a Link component on this page to return to the home page. */,
   },
   {
     path: "/archive",
     element: <ArchivePage />,
-    errorElement: <div>404 Not Found. Bad address?</div>, /* Later on, put a Link component on this page to return to the home page. */
-  }
+    errorElement: (
+      <div>404 Not Found. Bad address?</div>
+    ) /* Later on, put a Link component on this page to return to the home page. */,
+  },
 ]);
 
 createRoot(document.getElementById("root")!).render(
