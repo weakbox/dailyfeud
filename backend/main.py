@@ -38,17 +38,10 @@ async def create_question(request: QuestionRequest) -> QuestionModel:
     store_question(question)
     return question
 
-@app.get("/get-question/{id}")
-async def get_question(id: int) -> QuestionModel:
-    """
-    Retrieves a question from the database based off of its ID.
-    """
-    return retrieve_question(id)
-
 @app.get("/get-question-prompt/{id}")
-async def get_question_prompt(id: int) -> str:
+async def get_question_prompt(id: int) -> Dict[str, int | str]:
     """
-    Retrieves the prompt of a question from the database based off of its ID.
+    Retrieves the prompt of a question and its number of answers from the database based off of its ID.
     """
     return retrieve_question_prompt(id)
 

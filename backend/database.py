@@ -100,22 +100,28 @@ def retrieve_question(id: int) -> QuestionModel:
 
     return QuestionModel(question=question, answers=answers)
 
-def retrieve_question_prompt(id: int) -> str:
+def retrieve_question_prompt(id: int) -> dict[str, int | str]:
     """
-    Retrieve a question prompt from the database based off of the question's ID.
+    Retrieve a question prompt and number of answers from the database based off of the question's ID.
     """
     # Use a "with" statement here?
     con = get_connection()
     cur = con.cursor()
 
     cur.execute("""
-                SELECT question FROM questions 
-                WHERE questions.id = ?
+                SELECT question, COUNT(*)
+                FROM questions 
+                JOIN answers
+                  ON questions.id = answers.question_id
+                WHERE question_id = ?
                 """, (id,))
     result = cur.fetchone()
     con.close()
 
-    return result[0] if result else ""
+    return {
+        "prompt": result[0],
+        "count": result[1]
+    }
 
 def retrieve_all_question_prompts() -> List[Dict[str, int | str]]:
     """

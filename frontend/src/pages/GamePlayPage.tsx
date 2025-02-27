@@ -10,7 +10,7 @@ function GamePlayPage() {
   const { id } = useParams();
   const [guess, setGuess] = useState("");
   const [question, setQuestion] = useState("");
-  const [answers, setAnswers] = useState(new Array(8).fill(""));
+  const [answers, setAnswers] = useState(null);
 
   const audioRef = useRef(new Audio(correct));
 
@@ -27,7 +27,8 @@ function GamePlayPage() {
       try {
         const response = await fetch(GET_QUESTION_URL(id));
         const data = await response.json();
-        setQuestion(data);
+        setQuestion(data.prompt);
+        setAnswers(new Array(data.count).fill(""));
       } catch (error) {
         console.error("Error fetching question:", error);
       }
@@ -94,7 +95,7 @@ function GamePlayPage() {
       </h1>
 
       <div className="grid w-full grid-flow-col grid-cols-1 grid-rows-8 gap-2 sm:grid-cols-2 sm:grid-rows-4">
-        {renderBoxes(8)}
+        {answers && renderBoxes(answers.length)}
       </div>
 
       <form onSubmit={handleGuess} className="flex w-full flex-row gap-2">
