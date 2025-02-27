@@ -12,26 +12,29 @@ type Prompt = {
 function ArchivePage() {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
 
-  // Can convert to a try/catch/await block later on.
   useEffect(() => {
-    fetch(URL)
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
+    const fetchPrompts = async () => {
+      try {
+        const response = await fetch(URL);
+        const data = await response.json();
         setPrompts(data);
-      });
+      } catch (error) {
+        console.error("Error fetching question:", error);
+      }
+    };
+
+    fetchPrompts();
   }, []);
 
   return (
     <>
       <h1 className="text-center text-4xl font-bold">QUESTION ARCHIVE</h1>
-      <div className="flex w-full flex-col items-center gap-2 bg-sky-400 p-2">
+      <div className="flex w-full flex-col items-center gap-2 p-2">
         {prompts.map((p) => (
           <Link
             key={p.id}
             to={`/question/${p.id}`}
-            className="block w-full rounded-lg border-4 border-black bg-white px-2 py-1 text-center font-bold"
+            className="block w-full rounded-md border-3 border-black bg-white px-2 py-1 text-center font-bold"
           >
             {p.prompt.toUpperCase()}
           </Link>
