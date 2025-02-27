@@ -17,18 +17,22 @@ def generate_question(question: str) -> QuestionModel:
         "question": "{question}",
         "answers": {{
             "answer 1": {{
+                "position": 1
                 "value": x1,  # Points should sum up to 100
                 "synonyms": ["synonym 1", "synonym 2", "synonym 3", ...]
             }},
             "answer 2": {{
+                "position": 2
                 "value": x2,
                 "synonyms": ["synonym 1", "synonym 2", "synonym 3", ...]
             }},
             "answer 3": {{
+                "position": 3
                 "value": x3,
                 "synonyms": ["synonym 1", "synonym 2", "synonym 3", ...]
             }},
             "answer 4": {{
+                "position": 4
                 "value": x4,
                 "synonyms": ["synonym 1", "synonym 2", "synonym 3", ...]
             }},
@@ -42,18 +46,22 @@ def generate_question(question: str) -> QuestionModel:
         "question": "Name an object in your living room",
         "answers": {{
             "tv": {{
+                "position": 1
                 "value": 49,
                 "synonyms": ["television", "screen", "monitor"]
             }},
             "couch": {{
+                "position": 2
                 "value": 24,
                 "synonyms": ["sofa", "settee", "loveseat"]
             }},
             "lamp": {{
+                "position": 3
                 "value": 16,
                 "synonyms": ["table lamp", "floor lamp"]
             }},
             "table": {{
+                "position": 4
                 "value": 11,
                 "synonyms": ["coffee table", "side table", "desk"]
             }}

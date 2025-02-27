@@ -74,16 +74,15 @@ async def submit_guess(request: GuessRequest) -> dict:
     flat_answer_set = flatten_answer_set(answer_set)
 
     best_match, best_score = process.extractOne(guess, flat_answer_set.keys())
+    print(flat_answer_set, best_match, best_score)
 
     if best_score >= THRESHOLD:
         return {
             "correct": True,
+            "position": answer_set[flat_answer_set[best_match]].position,
             "answer": flat_answer_set[best_match],
-            "score": best_score
         }
 
     return {
         "correct": False,
-        "answer": None,
-        "score": None
     }

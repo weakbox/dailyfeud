@@ -1,6 +1,5 @@
 import sqlite3
 from models import QuestionModel, AnswerModel
-from collections import defaultdict
 from typing import List, Dict
 
 DATABASE_PATH = "database.db"
@@ -33,6 +32,7 @@ def initialize_database() -> None:
             question_id INTEGER NOT NULL,
             answer TEXT NOT NULL,
             points INTEGER NOT NULL DEFAULT 0,
+            position INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
         )
     """)
@@ -60,7 +60,7 @@ def store_question(question: QuestionModel) -> None:
     question_id = cur.lastrowid
 
     for answer, answer_model in question.answers.items():
-        cur.execute("INSERT INTO answers VALUES(NULL, ?, ?, ?)", (question_id, answer, answer_model.value))
+        cur.execute("INSERT INTO answers VALUES(NULL, ?, ?, ?, ?)", (question_id, answer, answer_model.value, answer_model.position))
         answer_id = cur.lastrowid
 
         for synonym in answer_model.synonyms:
@@ -77,7 +77,7 @@ def retrieve_question(id: int) -> QuestionModel:
     cur = con.cursor()
 
     cur.execute("""
-        SELECT question, answer, synonym 
+        SELECT question, answer, synonym, points, position
         FROM questions 
         JOIN answers
           ON questions.id = answers.question_id
@@ -89,9 +89,11 @@ def retrieve_question(id: int) -> QuestionModel:
     results = cur.fetchall()
     
     question = results[0][0]
-    answers = defaultdict(lambda: AnswerModel(value=0, synonyms=[]))
+    answers = {}
 
-    for _, answer, synonym in results:
+    for _, answer, synonym, points, position in results:
+        if answer not in answers:
+            answers[answer] = AnswerModel(position=position, value=points, synonyms=[answer])
         answers[answer].synonyms.append(synonym)
 
     con.close()

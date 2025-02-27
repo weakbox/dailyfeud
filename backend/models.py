@@ -9,6 +9,7 @@ class GuessRequest(BaseModel):
     guess: str
 
 class AnswerModel(BaseModel):
+    position: int
     value: int
     synonyms: List[str]
 
