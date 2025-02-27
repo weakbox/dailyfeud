@@ -28,7 +28,7 @@ function GamePlayPage() {
         key={i}
         className={`rounded-lg border-3 border-black px-4 py-4 text-center font-bold ${answers[i] ? "bg-green-400" : "bg-sky-400"}`}
       >
-        {i + 1} {answers[i]}
+        {answers[i] ? answers[i] : i + 1}
       </div>
     ));
 
@@ -49,6 +49,14 @@ function GamePlayPage() {
 
       const result = await response.json();
       console.log("Guess submitted successfully:", result);
+
+      if (result.correct) {
+        setAnswers((prevAnswers) =>
+          prevAnswers.map((a, i) =>
+            i + 1 === result.position ? result.answer.toUpperCase() : a,
+          ),
+        );
+      }
     } catch (error) {
       console.error("Failed to submit guess:", error);
     }
