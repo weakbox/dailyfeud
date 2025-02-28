@@ -73,6 +73,7 @@ async def submit_guess(request: GuessRequest) -> dict:
             "correct": True,
             "position": answer_set[flat_answer_set[best_match]].position,
             "answer": flat_answer_set[best_match],
+            "value": answer_set[flat_answer_set[best_match]].value,
         }
 
     return {
