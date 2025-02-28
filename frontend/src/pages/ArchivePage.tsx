@@ -27,20 +27,23 @@ function ArchivePage() {
   }, []);
 
   return (
-    <>
-      <h1 className="text-center text-4xl font-bold">QUESTION ARCHIVE</h1>
-      <div className="flex w-full flex-col items-center gap-2 p-2">
+    <div className="flex w-full flex-col items-center gap-4 p-2 text-center">
+      <div className="flex gap-2 items-center justify-center w-full rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black">
+        <h1>QUESTION ARCHIVE</h1>
+        <i className="fa-solid fa-box-open"></i>
+      </div>
+      <div className="flex w-full flex-col items-center gap-2">
         {prompts.map((p) => (
           <Link
             key={p.id}
             to={`/question/${p.id}`}
-            className="block w-full rounded-md border-3 border-black bg-white px-2 py-1 text-center font-bold"
+            className="w-full rounded-md border-2 border-b-4 border-black px-4 py-2 text-center font-bold bg-white hover:bg-gray-100"
           >
             {p.prompt.toUpperCase()}
           </Link>
         ))}
       </div>
-    </>
+    </div>
   );
 }
 

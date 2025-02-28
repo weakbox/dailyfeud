@@ -128,11 +128,11 @@ function GamePlayPage() {
 
   return (
     <div className="flex w-full flex-col items-center gap-4 p-2 text-center">
-      <h1 className="w-full rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-bold">
+      <h1 className="w-full rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black">
         {question.prompt.toUpperCase()}
       </h1>
 
-      <div className="flex w-2/5 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-pink-300 px-4 py-2 font-bold">
+      <div className="flex w-2/5 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-red-300 px-4 py-2 font-bold">
         <span>STRIKES:</span>
         {Array.from({ length: strikes }, (_, i) => (
           <i key={i} className="fa-solid fa-x text-red-600"></i>
@@ -150,19 +150,19 @@ function GamePlayPage() {
           value={guess}
           onChange={(e) => setGuess(e.target.value.toUpperCase())}
           placeholder="ENTER A GUESS..."
-          className="w-4/5 rounded-md border-2 border-b-4 border-black bg-yellow-300 px-4 py-2 font-bold"
+          className="w-4/5 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold"
         />
         <input
           type="submit"
           value="GUESS"
-          className="w-1/5 rounded-md border-2 border-b-4 border-black bg-pink-300 px-4 py-2 font-bold overflow-ellipsis"
+          className="w-1/5 rounded-md border-2 border-b-4 border-black px-4 py-2 font-bold overflow-ellipsis bg-white hover:bg-gray-100 cursor-pointer"
           disabled={!guess.trim()}
         />
       </form>
 
       <Link
         to="/archive"
-        className="w-full rounded-md border-2 border-b-4 border-black bg-pink-300 px-4 py-2 font-bold"
+        className="w-full rounded-md border-2 border-b-4 border-black px-4 py-2 font-bold bg-white hover:bg-gray-100"
       >
         QUESTION ARCHIVE
       </Link>
