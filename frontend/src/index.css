@@ -18,5 +18,5 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Roboto", "sans-serif"
+  --font-sans: "Roboto", "sans-serif";
 }

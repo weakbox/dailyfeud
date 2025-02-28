@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router";
+import AnswerBox from "../components/AnswerBox";
 import correct from "../assets/correct.mp3";
 import wrong from "../assets/wrong.mp3";
 
@@ -23,6 +24,24 @@ type Answer = {
   correct: boolean;
 };
 
+// Play a sound effect from a provided audio element reference.
+const playSound = (ref: React.RefObject<HTMLAudioElement>) => {
+  if (!ref.current) return;
+
+  ref.current.currentTime = 0;
+  ref.current.play().catch((error) => {
+    console.error("Error playing audio:", error);
+  });
+};
+
+// Update answers:
+const updateAnswers = (prevAnswers: Answer[], result) =>
+  prevAnswers.map((a, i) => ({
+    text: i + 1 === result.position ? result.answer.toUpperCase() : a.text,
+    value: i + 1 === result.position ? result.value : a.value,
+    correct: i + 1 === result.position ? true : a.correct,
+  }));
+
 function GamePlayPage() {
   const { id } = useParams<RouteParams>();
   const [question, setQuestion] = useState<Question>({
@@ -34,16 +53,6 @@ function GamePlayPage() {
 
   const correctRef = useRef(new Audio(correct));
   const wrongRef = useRef(new Audio(wrong));
-
-  // Play a sound effect from a provided audio element reference.
-  const playSound = (ref: React.RefObject<HTMLAudioElement>) => {
-    if (!ref.current) return;
-
-    ref.current.currentTime = 0;
-    ref.current.play().catch((error) => {
-      console.error("Error playing audio:", error);
-    });
-  };
 
   // Fetch question from backend on component mount.
   useEffect(() => {
@@ -67,25 +76,11 @@ function GamePlayPage() {
     fetchQuestion();
   }, []);
 
-  // Dynamically render "count" number of answer boxes.
-  const renderBoxes = (count: number) =>
+  // Dynamically generate "count" number of answer boxes.
+  const generateBoxes = (count: number) =>
     Array.from({ length: count }, (_, i) => (
-      <div
-        key={i}
-        className={`rounded-md border-2 border-b-4 border-black px-4 py-2 text-center font-bold ${question.answers[i].text ? "bg-green-300" : "bg-blue-400"}`}
-      >
-        {question.answers[i].correct ? question.answers[i].text : i + 1}
-        {question.answers[i].correct ? `: ${question.answers[i].value}` : ""}
-      </div>
+      <AnswerBox index={i} answer={question.answers[i]} />
     ));
-
-  // Update answers:
-  const updateAnswers = (prevAnswers: Answer[], result) =>
-    prevAnswers.map((a, i) => ({
-      text: i + 1 === result.position ? result.answer.toUpperCase() : a.text,
-      value: i + 1 === result.position ? result.value : a.value,
-      correct: i + 1 === result.position ? true : a.correct,
-    }));
 
   // Handle form submission for guessing the answer.
   const handleGuess = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -126,6 +121,7 @@ function GamePlayPage() {
     setGuess("");
   };
 
+  // Add a skeleton loader at some point to fill in while the question is being fetched.
   return (
     <div className="flex w-full flex-col items-center gap-4 p-2 text-center">
       <h1 className="w-full rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black">
@@ -135,13 +131,13 @@ function GamePlayPage() {
       <div className="flex w-2/5 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-red-300 px-4 py-2 font-bold">
         <span>STRIKES:</span>
         {Array.from({ length: strikes }, (_, i) => (
-          <i key={i} className="fa-solid fa-x text-red-600"></i>
+          <i key={i} className="fa-solid fa-xmark text-red-600"></i>
         ))}
       </div>
 
       {/* These classes are implemented pretty badly I think. */}
       <div className="grid w-full auto-rows-auto grid-cols-1 gap-2 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-4">
-        {renderBoxes(question.answers.length)}
+        {generateBoxes(question.answers.length)}
       </div>
 
       <form onSubmit={handleGuess} className="flex w-full flex-row gap-2">
@@ -155,14 +151,14 @@ function GamePlayPage() {
         <input
           type="submit"
           value="GUESS"
-          className="w-1/5 rounded-md border-2 border-b-4 border-black px-4 py-2 font-bold overflow-ellipsis bg-white hover:bg-gray-100 cursor-pointer"
+          className="w-1/5 cursor-pointer rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold overflow-ellipsis hover:bg-gray-100"
           disabled={!guess.trim()}
         />
       </form>
 
       <Link
         to="/archive"
-        className="w-full rounded-md border-2 border-b-4 border-black px-4 py-2 font-bold bg-white hover:bg-gray-100"
+        className="w-full rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold hover:bg-gray-100"
       >
         QUESTION ARCHIVE
       </Link>
