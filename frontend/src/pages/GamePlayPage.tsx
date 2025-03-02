@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router";
+import CountUp from 'react-countup';
 import AnswerBox from "../components/AnswerBox";
 import correct from "../assets/correct.mp3";
 import wrong from "../assets/wrong.mp3";
@@ -41,6 +42,10 @@ const updateAnswers = (prevAnswers: Answer[], result) =>
     value: i + 1 === result.position ? result.value : a.value,
     correct: i + 1 === result.position ? true : a.correct,
   }));
+
+const sumScore = (answers) => {
+  return answers.reduce((acc, curr) => acc + curr.value, 0);
+}
 
 function GamePlayPage() {
   const { id } = useParams<RouteParams>();
@@ -128,13 +133,24 @@ function GamePlayPage() {
         {question.prompt.toUpperCase()}
       </h1>
 
-      <div className="flex w-2/5 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-red-300 px-4 py-2 font-bold">
-        <span>STRIKES:</span>
-        {Array.from({ length: strikes }, (_, i) => (
-          <i key={i} className="fa-solid fa-xmark text-red-600"></i>
-        ))}
-      </div>
+      <div className="flex w-full flex-row gap-2">
+        <div className="flex w-1/2 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold">
+          <span>SCORE:</span>
+          <CountUp
+            end={sumScore(question.answers)}
+            duration={1}
+            preserveValue={true}
+          />
+        </div>
 
+        <div className="flex w-1/2 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-red-300 px-4 py-2 font-bold">
+          <span>STRIKES:</span>
+          {Array.from({ length: strikes }, (_, i) => (
+            <i key={i} className="fa-solid fa-xmark text-red-600"></i>
+          ))}
+        </div>
+      </div>
+      
       {/* These classes are implemented pretty badly I think. */}
       <div className="grid w-full auto-rows-auto grid-cols-1 gap-2 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-4">
         {generateBoxes(question.answers.length)}
@@ -144,15 +160,17 @@ function GamePlayPage() {
         <input
           type="text"
           value={guess}
+          maxLength={32}
           onChange={(e) => setGuess(e.target.value.toUpperCase())}
-          placeholder="ENTER A GUESS..."
-          className="w-4/5 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold"
+          placeholder={strikes >= 3 ? "GAME OVER" : "ENTER A GUESS..."}
+          className="w-3/4 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold"
+          disabled={strikes >= 3}
         />
         <input
           type="submit"
           value="GUESS"
-          className="w-1/5 cursor-pointer rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold overflow-ellipsis hover:bg-gray-100"
-          disabled={!guess.trim()}
+          className="w-1/4 cursor-pointer rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold overflow-ellipsis hover:bg-gray-100"
+          disabled={!guess.trim() || strikes >= 3}
         />
       </form>
 
