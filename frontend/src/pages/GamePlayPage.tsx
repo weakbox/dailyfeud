@@ -6,7 +6,8 @@ import correct from "../assets/correct.mp3";
 import wrong from "../assets/wrong.mp3";
 
 const BASE_URL = "http://127.0.0.1:8000";
-const GET_QUESTION_URL = (id: string): string => `${BASE_URL}/get-question-prompt/${id}`;
+const GET_QUESTION_URL = (id: string): string =>
+  `${BASE_URL}/get-question-prompt/${id}`;
 const POST_GUESS_URL = `${BASE_URL}/submit-guess/`;
 
 type RouteParams = {
@@ -22,15 +23,20 @@ interface State {
     value: number;
   }[];
   guess: string;
-  gameStatus: "playing" | "won" | "lost";
+  gameStatus: "initializing" | "playing" | "won" | "lost";
 }
 
 interface Action {
-  type: "init_question" | "add_strike" | "update_guess" | "update_answer";
+  type:
+    | "init_question"
+    | "add_strike"
+    | "update_guess"
+    | "update_answer"
+    | "end_game";
   payload?: any;
 }
 
-function reducer(state: State, action: Action) {
+function reducer(state: State, action: Action): State {
   switch (action.type) {
     case "init_question": {
       const { prompt, answerCount } = action.payload;
@@ -42,6 +48,7 @@ function reducer(state: State, action: Action) {
           text: "",
           value: 0,
         }),
+        gameStatus: "playing",
       };
     }
     case "add_strike": {
@@ -60,6 +67,9 @@ function reducer(state: State, action: Action) {
           value: i + 1 === position ? value : a.value,
         })),
       };
+    }
+    case "end_game": {
+      return { ...state, gameStatus: action.payload };
     }
     default:
       throw Error("Unknown action: " + action.type);
@@ -88,7 +98,7 @@ function GamePlayPage() {
     strikes: 0,
     answers: [],
     guess: "",
-    gameStatus: "playing",
+    gameStatus: "initializing",
   });
 
   const correctRef = useRef(new Audio(correct));
@@ -103,10 +113,10 @@ function GamePlayPage() {
         }
         const response = await fetch(GET_QUESTION_URL(id));
         const data = await response.json();
-        
+
         dispatch({
-          type: "init_question", 
-          payload: { prompt: data.prompt, answerCount: data.count }
+          type: "init_question",
+          payload: { prompt: data.prompt, answerCount: data.count },
         });
       } catch (error) {
         console.error("Error fetching question:", error);
@@ -115,6 +125,19 @@ function GamePlayPage() {
 
     fetchQuestion();
   }, []);
+
+  // Check for game over conditions from both the answer array and strikes:
+  useEffect(() => {
+    if (state.gameStatus !== "playing") {
+      return;
+    }
+
+    if (state.answers.every((a) => a.isCorrect === true)) {
+      dispatch({ type: "end_game", payload: "won" });
+    } else if (state.strikes >= 3) {
+      dispatch({ type: "end_game", payload: "lost" });
+    }
+  }, [state.answers, state.strikes]);
 
   // Dynamically generate "count" number of answer boxes.
   const generateBoxes = (count: number) =>
@@ -161,7 +184,7 @@ function GamePlayPage() {
       console.error("Failed to submit guess:", error);
     }
 
-    dispatch({ 
+    dispatch({
       type: "update_guess",
       payload: "",
     });
@@ -179,13 +202,13 @@ function GamePlayPage() {
           <span>SCORE:</span>
           <CountUp
             end={sumScore(state.answers)}
-            duration={1}
+            duration={0.5}
             preserveValue={true}
           />
         </div>
 
         <div className="flex w-1/2 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-red-300 px-4 py-2 font-bold">
-          <span>STRIKES:</span>
+          <span>{state.strikes ? "STRIKES:" : "NO STRIKES"}</span>
           {Array.from({ length: state.strikes }, (_, i) => (
             <i key={i} className="fa-solid fa-xmark text-red-600"></i>
           ))}
@@ -202,10 +225,12 @@ function GamePlayPage() {
           type="text"
           value={state.guess}
           maxLength={32}
-          onChange={(e) => dispatch({ 
-            type: "update_guess",
-            payload: e.target.value,
-          })}
+          onChange={(e) =>
+            dispatch({
+              type: "update_guess",
+              payload: e.target.value,
+            })
+          }
           placeholder={state.strikes >= 3 ? "GAME OVER" : "ENTER A GUESS..."}
           className="w-3/4 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold"
           disabled={state.strikes >= 3}
