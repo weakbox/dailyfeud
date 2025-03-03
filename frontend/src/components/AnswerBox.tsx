@@ -19,7 +19,7 @@ const AnsweredBox = ({ answer }: { answer: Answer }) => (
 );
 
 const AnswerBox = ({ index, answer }: AnswerBoxProps) =>
-  answer.correct ? (
+  answer.isCorrect ? (
     <AnsweredBox answer={answer} />
   ) : (
     <UnansweredBox index={index} />

@@ -1,29 +1,70 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useReducer } from "react";
 import { useParams, Link } from "react-router";
-import CountUp from 'react-countup';
+import CountUp from "react-countup";
 import AnswerBox from "../components/AnswerBox";
 import correct from "../assets/correct.mp3";
 import wrong from "../assets/wrong.mp3";
 
 const BASE_URL = "http://127.0.0.1:8000";
-const GET_QUESTION_URL = (id: string): string =>
-  `${BASE_URL}/get-question-prompt/${id}`;
+const GET_QUESTION_URL = (id: string): string => `${BASE_URL}/get-question-prompt/${id}`;
 const POST_GUESS_URL = `${BASE_URL}/submit-guess/`;
 
 type RouteParams = {
   id: string;
 };
 
-type Question = {
+interface State {
   prompt: string;
-  answers: Answer[];
-};
+  strikes: number;
+  answers: {
+    isCorrect: boolean;
+    text: string;
+    value: number;
+  }[];
+  guess: string;
+  gameStatus: "playing" | "won" | "lost";
+}
 
-type Answer = {
-  text: string;
-  value: number;
-  correct: boolean;
-};
+interface Action {
+  type: "init_question" | "add_strike" | "update_guess" | "update_answer";
+  payload?: any;
+}
+
+function reducer(state: State, action: Action) {
+  switch (action.type) {
+    case "init_question": {
+      const { prompt, answerCount } = action.payload;
+      return {
+        ...state,
+        prompt: prompt,
+        answers: new Array(answerCount).fill({
+          isCorrect: false,
+          text: "",
+          value: 0,
+        }),
+      };
+    }
+    case "add_strike": {
+      return { ...state, strikes: state.strikes + 1 };
+    }
+    case "update_guess": {
+      return { ...state, guess: action.payload.toUpperCase() };
+    }
+    case "update_answer": {
+      const { position, text, value } = action.payload;
+      return {
+        ...state,
+        answers: state.answers.map((a, i) => ({
+          isCorrect: i + 1 === position ? true : a.isCorrect,
+          text: i + 1 === position ? text.toUpperCase() : a.text,
+          value: i + 1 === position ? value : a.value,
+        })),
+      };
+    }
+    default:
+      throw Error("Unknown action: " + action.type);
+  }
+}
 
 // Play a sound effect from a provided audio element reference.
 const playSound = (ref: React.RefObject<HTMLAudioElement>) => {
@@ -35,26 +76,20 @@ const playSound = (ref: React.RefObject<HTMLAudioElement>) => {
   });
 };
 
-// Update answers:
-const updateAnswers = (prevAnswers: Answer[], result) =>
-  prevAnswers.map((a, i) => ({
-    text: i + 1 === result.position ? result.answer.toUpperCase() : a.text,
-    value: i + 1 === result.position ? result.value : a.value,
-    correct: i + 1 === result.position ? true : a.correct,
-  }));
-
-const sumScore = (answers) => {
-  return answers.reduce((acc, curr) => acc + curr.value, 0);
-}
+const sumScore = (answers: any) => {
+  return answers.reduce((acc: any, curr: any) => acc + curr.value, 0);
+};
 
 function GamePlayPage() {
   const { id } = useParams<RouteParams>();
-  const [question, setQuestion] = useState<Question>({
+
+  const [state, dispatch] = useReducer(reducer, {
     prompt: "",
+    strikes: 0,
     answers: [],
+    guess: "",
+    gameStatus: "playing",
   });
-  const [guess, setGuess] = useState("");
-  const [strikes, setStrikes] = useState(0);
 
   const correctRef = useRef(new Audio(correct));
   const wrongRef = useRef(new Audio(wrong));
@@ -63,15 +98,15 @@ function GamePlayPage() {
   useEffect(() => {
     const fetchQuestion = async () => {
       try {
+        if (!id) {
+          throw new Error("No question ID provided.");
+        }
         const response = await fetch(GET_QUESTION_URL(id));
         const data = await response.json();
-        setQuestion({
-          prompt: data.prompt,
-          answers: new Array(data.count).fill({
-            text: "",
-            value: 0,
-            correct: false,
-          }),
+        
+        dispatch({
+          type: "init_question", 
+          payload: { prompt: data.prompt, answerCount: data.count }
         });
       } catch (error) {
         console.error("Error fetching question:", error);
@@ -84,14 +119,14 @@ function GamePlayPage() {
   // Dynamically generate "count" number of answer boxes.
   const generateBoxes = (count: number) =>
     Array.from({ length: count }, (_, i) => (
-      <AnswerBox index={i} answer={question.answers[i]} />
+      <AnswerBox key={i} index={i} answer={state.answers[i]} />
     ));
 
   // Handle form submission for guessing the answer.
   const handleGuess = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const guessRequest = { id, guess };
+    const guessRequest = { id, guess: state.guess };
 
     try {
       const response = await fetch(POST_GUESS_URL, {
@@ -109,35 +144,41 @@ function GamePlayPage() {
       console.log("Guess submitted successfully:", result);
 
       if (result.correct) {
-        setQuestion((prevQuestion) => ({
-          ...prevQuestion,
-          answers: updateAnswers(prevQuestion.answers, result),
-        }));
+        dispatch({
+          type: "update_answer",
+          payload: {
+            position: result.position,
+            text: result.answer,
+            value: result.value,
+          },
+        });
         playSound(correctRef);
       } else {
-        setStrikes((prevStrikes) => prevStrikes + 1);
+        dispatch({ type: "add_strike" });
         playSound(wrongRef);
-        // Add functionality to display strikes, as well as have a game over screen when all strikes are used.
       }
     } catch (error) {
       console.error("Failed to submit guess:", error);
     }
 
-    setGuess("");
+    dispatch({ 
+      type: "update_guess",
+      payload: "",
+    });
   };
 
   // Add a skeleton loader at some point to fill in while the question is being fetched.
   return (
     <div className="flex w-full flex-col items-center gap-4 p-2 text-center">
       <h1 className="w-full rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black">
-        {question.prompt.toUpperCase()}
+        {state.prompt.toUpperCase()}
       </h1>
 
       <div className="flex w-full flex-row gap-2">
         <div className="flex w-1/2 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold">
           <span>SCORE:</span>
           <CountUp
-            end={sumScore(question.answers)}
+            end={sumScore(state.answers)}
             duration={1}
             preserveValue={true}
           />
@@ -145,32 +186,35 @@ function GamePlayPage() {
 
         <div className="flex w-1/2 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-red-300 px-4 py-2 font-bold">
           <span>STRIKES:</span>
-          {Array.from({ length: strikes }, (_, i) => (
+          {Array.from({ length: state.strikes }, (_, i) => (
             <i key={i} className="fa-solid fa-xmark text-red-600"></i>
           ))}
         </div>
       </div>
-      
+
       {/* These classes are implemented pretty badly I think. */}
       <div className="grid w-full auto-rows-auto grid-cols-1 gap-2 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-4">
-        {generateBoxes(question.answers.length)}
+        {generateBoxes(state.answers.length)}
       </div>
 
       <form onSubmit={handleGuess} className="flex w-full flex-row gap-2">
         <input
           type="text"
-          value={guess}
+          value={state.guess}
           maxLength={32}
-          onChange={(e) => setGuess(e.target.value.toUpperCase())}
-          placeholder={strikes >= 3 ? "GAME OVER" : "ENTER A GUESS..."}
+          onChange={(e) => dispatch({ 
+            type: "update_guess",
+            payload: e.target.value,
+          })}
+          placeholder={state.strikes >= 3 ? "GAME OVER" : "ENTER A GUESS..."}
           className="w-3/4 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold"
-          disabled={strikes >= 3}
+          disabled={state.strikes >= 3}
         />
         <input
           type="submit"
           value="GUESS"
           className="w-1/4 cursor-pointer rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold overflow-ellipsis hover:bg-gray-100"
-          disabled={!guess.trim() || strikes >= 3}
+          disabled={!state.guess.trim() || state.strikes >= 3}
         />
       </form>
 
