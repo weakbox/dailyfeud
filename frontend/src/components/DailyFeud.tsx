@@ -221,12 +221,12 @@ function DailyFeud({ id }: { id: string }) {
   // Add a skeleton loader at some point to fill in while the question is being fetched.
   return (
     <div className="flex w-full flex-col items-center gap-4 p-2 text-center">
-      <h1 className="w-full rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black">
+      <h1 className="w-full rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black text-black dark:bg-blue-600 dark:text-white">
         {state.prompt.toUpperCase()}
       </h1>
 
       <div className="flex w-full flex-row gap-2">
-        <div className="flex w-1/2 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold">
+        <div className="flex w-1/2 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black dark:bg-zinc-700 dark:text-white">
           <span>SCORE:</span>
           <CountUp
             end={state.answers.reduce(
@@ -239,10 +239,13 @@ function DailyFeud({ id }: { id: string }) {
           />
         </div>
 
-        <div className="flex w-1/2 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-red-300 px-4 py-2 font-bold">
+        <div className="flex w-1/2 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-red-300 px-4 py-2 font-bold text-black dark:bg-red-500 dark:text-white">
           <span>{state.strikes ? "STRIKES:" : "NO STRIKES"}</span>
           {Array.from({ length: state.strikes }, (_, i) => (
-            <i key={i} className="fa-solid fa-xmark text-red-600"></i>
+            <i
+              key={i}
+              className="fa-solid fa-xmark text-red-600 dark:text-white"
+            ></i>
           ))}
         </div>
       </div>
@@ -264,20 +267,20 @@ function DailyFeud({ id }: { id: string }) {
             })
           }
           placeholder={state.strikes >= 3 ? "GAME OVER" : "ENTER A GUESS..."}
-          className="w-3/4 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold"
+          className="w-3/4 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black dark:bg-zinc-700 dark:text-white"
           disabled={state.strikes >= 3}
         />
         <input
           type="submit"
           value="GUESS"
-          className="w-1/4 cursor-pointer rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold overflow-ellipsis hover:bg-gray-100"
+          className="w-1/4 cursor-pointer rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold overflow-ellipsis text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
           disabled={!state.guess.trim() || state.strikes >= 3}
         />
       </form>
 
       <Link
         to="/archive"
-        className="w-full rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold hover:bg-gray-100"
+        className="w-full rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
       >
         QUESTION ARCHIVE
       </Link>
