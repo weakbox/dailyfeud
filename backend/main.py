@@ -52,6 +52,13 @@ async def get_all_question_prompts() -> List[Dict[str, int | str]]:
     """
     return retrieve_all_question_prompts()
 
+@app.get("/get-all-answers/{id}")
+async def get_all_answers(id: int):
+    """
+    Retrieves the entire list of answers for a given question ID from the database.
+    """
+    return retrieve_all_answers(id)
+
 @app.post("/submit-guess/")
 async def submit_guess(request: GuessRequest) -> dict:
     """

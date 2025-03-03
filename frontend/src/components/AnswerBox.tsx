@@ -1,6 +1,11 @@
 type AnswerBoxProps = {
   index: number;
-  answer: Answer;
+  answer: {
+    isRevealed: boolean;
+    isCorrect: boolean;
+    text: string;
+    value: number;
+  };
 };
 
 const UnansweredBox = ({ index }: { index: number }) => (
@@ -19,7 +24,7 @@ const AnsweredBox = ({ answer }: { answer: Answer }) => (
 );
 
 const AnswerBox = ({ index, answer }: AnswerBoxProps) =>
-  answer.isCorrect ? (
+  answer.isRevealed ? (
     <AnsweredBox answer={answer} />
   ) : (
     <UnansweredBox index={index} />

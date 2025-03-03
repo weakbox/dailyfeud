@@ -142,3 +142,25 @@ def retrieve_all_question_prompts() -> List[Dict[str, int | str]]:
         })
 
     return prompts
+
+def retrieve_all_answers(id: int):
+    """
+    Retrieve all answers for a given question ID from the database.
+    """
+    con = get_connection()
+    cur = con.cursor()
+
+    cur.execute("SELECT answer, points, position FROM answers WHERE question_id = ?", (id,))
+    result = cur.fetchall()
+    con.close()
+
+    answers = []
+    for row in result:
+        answers.append({
+            "correct": False,
+            "answer": row[0],
+            "points": row[1],
+            "position": row[2]
+        })
+
+    return answers

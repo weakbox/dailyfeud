@@ -8,6 +8,8 @@ import wrong from "../assets/wrong.mp3";
 const BASE_URL = "http://127.0.0.1:8000";
 const GET_QUESTION_URL = (id: string): string =>
   `${BASE_URL}/get-question-prompt/${id}`;
+const GET_ANSWERS_URL = (id: string): string =>
+  `${BASE_URL}/get-all-answers/${id}`;
 const POST_GUESS_URL = `${BASE_URL}/submit-guess/`;
 
 type RouteParams = {
@@ -18,6 +20,7 @@ interface State {
   prompt: string;
   strikes: number;
   answers: {
+    isRevealed: boolean;
     isCorrect: boolean;
     text: string;
     value: number;
@@ -32,7 +35,8 @@ interface Action {
     | "add_strike"
     | "update_guess"
     | "update_answer"
-    | "end_game";
+    | "end_game"
+    | "fill_answers";
   payload?: any;
 }
 
@@ -44,6 +48,7 @@ function reducer(state: State, action: Action): State {
         ...state,
         prompt: prompt,
         answers: new Array(answerCount).fill({
+          isRevealed: false,
           isCorrect: false,
           text: "",
           value: 0,
@@ -62,6 +67,7 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         answers: state.answers.map((a, i) => ({
+          isRevealed: i + 1 === position ? true : a.isRevealed,
           isCorrect: i + 1 === position ? true : a.isCorrect,
           text: i + 1 === position ? text.toUpperCase() : a.text,
           value: i + 1 === position ? value : a.value,
@@ -70,6 +76,21 @@ function reducer(state: State, action: Action): State {
     }
     case "end_game": {
       return { ...state, gameStatus: action.payload };
+    }
+    case "fill_answers": {
+      return {
+        ...state,
+        answers: state.answers.map((answer, i) =>
+          answer.isCorrect
+            ? answer
+            : {
+                isRevealed: true,
+                isCorrect: false,
+                text: action.payload[i].answer.toUpperCase(),
+                value: action.payload[i].points,
+              },
+        ),
+      };
     }
     default:
       throw Error("Unknown action: " + action.type);
@@ -86,13 +107,8 @@ const playSound = (ref: React.RefObject<HTMLAudioElement>) => {
   });
 };
 
-const sumScore = (answers: any) => {
-  return answers.reduce((acc: any, curr: any) => acc + curr.value, 0);
-};
-
 function GamePlayPage() {
   const { id } = useParams<RouteParams>();
-
   const [state, dispatch] = useReducer(reducer, {
     prompt: "",
     strikes: 0,
@@ -100,7 +116,6 @@ function GamePlayPage() {
     guess: "",
     gameStatus: "initializing",
   });
-
   const correctRef = useRef(new Audio(correct));
   const wrongRef = useRef(new Audio(wrong));
 
@@ -139,6 +154,31 @@ function GamePlayPage() {
     }
   }, [state.answers, state.strikes]);
 
+  // Reveal missed answers one by one when the game is over:
+  useEffect(() => {
+    if (state.gameStatus !== "lost") {
+      return;
+    }
+
+    const fetchAnswers = async () => {
+      try {
+        if (!id) {
+          throw new Error("No question ID provided.");
+        }
+        const response = await fetch(GET_ANSWERS_URL(id));
+        const data = await response.json();
+        dispatch({
+          type: "fill_answers",
+          payload: data,
+        });
+      } catch (error) {
+        console.error("Error fetching question:", error);
+      }
+    };
+
+    fetchAnswers();
+  }, [state.gameStatus]);
+
   // Dynamically generate "count" number of answer boxes.
   const generateBoxes = (count: number) =>
     Array.from({ length: count }, (_, i) => (
@@ -164,7 +204,6 @@ function GamePlayPage() {
       }
 
       const result = await response.json();
-      console.log("Guess submitted successfully:", result);
 
       if (result.correct) {
         dispatch({
@@ -201,7 +240,11 @@ function GamePlayPage() {
         <div className="flex w-1/2 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold">
           <span>SCORE:</span>
           <CountUp
-            end={sumScore(state.answers)}
+            end={state.answers.reduce(
+              (acc: any, curr: any) =>
+                curr.isCorrect ? acc + curr.value : acc,
+              0,
+            )}
             duration={0.5}
             preserveValue={true}
           />
