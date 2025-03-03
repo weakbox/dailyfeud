@@ -16,7 +16,7 @@ const router = createBrowserRouter([
     ) /* Later on, put a Link component on this page to return to the home page. */,
   },
   {
-    path: "/question/:id",
+    path: "/question/:id?",
     element: <GamePlayPage />,
     errorElement: (
       <div>404 Not Found. Bad address?</div>
