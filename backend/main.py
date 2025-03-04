@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import HTTPException
-from thefuzz import process
+from thefuzz import process, fuzz
 from answers import *
 from database import *
 from utils import flatten_answer_set
@@ -20,7 +20,7 @@ app.add_middleware(
 
 initialize_database()
 
-THRESHOLD = 80  # It's currently pretty generous. Especially when including one word in a multi-word answer (e.g. "coffee" -> "coffee table").
+THRESHOLD = 80
 
 @app.get("/")
 async def root() -> None:
@@ -78,7 +78,9 @@ async def submit_guess(request: GuessRequest) -> dict:
         answer_set = question.answers
         flat_answer_set = flatten_answer_set(answer_set)
 
-        best_match, best_score = process.extractOne(guess, flat_answer_set.keys())
+        best_match, best_score = process.extractOne(guess, flat_answer_set.keys(), scorer=fuzz.token_set_ratio)
+
+        print("TheFuzz Scoring Opinion: ", best_match, flat_answer_set[best_match], best_score)
 
         if best_score >= THRESHOLD:
             return {
