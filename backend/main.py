@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import HTTPException
 from thefuzz import process
 from answers import *
 from database import *
@@ -43,7 +44,12 @@ async def get_question_prompt(id: int) -> Dict[str, int | str]:
     """
     Retrieves the prompt of a question and its number of answers from the database based off of its ID.
     """
-    return retrieve_question_prompt(id)
+    try:
+        return retrieve_question_prompt(id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred.")
 
 @app.get("/get-all-question-prompts/")
 async def get_all_question_prompts() -> List[Dict[str, int | str]]:
@@ -64,25 +70,28 @@ async def submit_guess(request: GuessRequest) -> dict:
     """
     Submits a guess for a question and returns whether or not it is correct.
     """
-    question = retrieve_question(request.id)
-    # TODO: Check if question exists:
+    try:
+        question = retrieve_question(request.id)
 
-    guess = request.guess.strip().lower()
-    # TODO: Check if guess is valid:
+        guess = request.guess.strip().lower()
 
-    answer_set = question.answers
-    flat_answer_set = flatten_answer_set(answer_set)
+        answer_set = question.answers
+        flat_answer_set = flatten_answer_set(answer_set)
 
-    best_match, best_score = process.extractOne(guess, flat_answer_set.keys())
+        best_match, best_score = process.extractOne(guess, flat_answer_set.keys())
 
-    if best_score >= THRESHOLD:
+        if best_score >= THRESHOLD:
+            return {
+                "correct": True,
+                "position": answer_set[flat_answer_set[best_match]].position,
+                "answer": flat_answer_set[best_match],
+                "value": answer_set[flat_answer_set[best_match]].value,
+            }
+
         return {
-            "correct": True,
-            "position": answer_set[flat_answer_set[best_match]].position,
-            "answer": flat_answer_set[best_match],
-            "value": answer_set[flat_answer_set[best_match]].value,
+            "correct": False,
         }
-
-    return {
-        "correct": False,
-    }
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="An unexpected error occurred.")

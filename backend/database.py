@@ -2,6 +2,8 @@ import sqlite3
 from models import QuestionModel, AnswerModel
 from typing import List, Dict
 
+# !!! At some point we should refactor this to close database cursors.
+
 DATABASE_PATH = "database.db"
 
 def get_connection():
@@ -73,21 +75,23 @@ def retrieve_question(id: int) -> QuestionModel:
     """
     Retrieve a question, answers, and synonyms from the database.
     """
-    con = get_connection()
-    cur = con.cursor()
+    with get_connection() as con:
+        cur = con.cursor()
+        cur.execute("""
+            SELECT question, answer, synonym, points, position
+            FROM questions 
+            JOIN answers
+            ON questions.id = answers.question_id
+            JOIN synonyms 
+            ON answers.id = synonyms.answer_id 
+            WHERE question_id = ?
+            """, (id,))
+        
+        results = cur.fetchall()
+    
+    if not results:
+        raise ValueError(f"Question with ID {id} not found.")
 
-    cur.execute("""
-        SELECT question, answer, synonym, points, position
-        FROM questions 
-        JOIN answers
-          ON questions.id = answers.question_id
-        JOIN synonyms 
-          ON answers.id = synonyms.answer_id 
-        WHERE question_id = ?
-        """, (id,))
-    
-    results = cur.fetchall()
-    
     question = results[0][0]
     answers = {}
 
@@ -96,31 +100,29 @@ def retrieve_question(id: int) -> QuestionModel:
             answers[answer] = AnswerModel(position=position, value=points, synonyms=[answer])
         answers[answer].synonyms.append(synonym)
 
-    con.close()
-
     return QuestionModel(question=question, answers=answers)
 
 def retrieve_question_prompt(id: int) -> dict[str, int | str]:
     """
     Retrieve a question prompt and number of answers from the database based off of the question's ID.
     """
-    # Use a "with" statement here?
-    con = get_connection()
-    cur = con.cursor()
+    with get_connection() as con:
+        cur = con.cursor()
+        cur.execute("""
+                    SELECT question, COUNT(*)
+                    FROM questions 
+                    JOIN answers
+                    ON questions.id = answers.question_id
+                    WHERE question_id = ?
+                    """, (id,))
+        result = cur.fetchone()
 
-    cur.execute("""
-                SELECT question, COUNT(*)
-                FROM questions 
-                JOIN answers
-                  ON questions.id = answers.question_id
-                WHERE question_id = ?
-                """, (id,))
-    result = cur.fetchone()
-    con.close()
+    if result is None or result[0] is None:
+        raise ValueError(f"Question with ID {id} not found.")
 
     return {
         "prompt": result[0],
-        "count": result[1]
+        "count": result[1],
     }
 
 def retrieve_all_question_prompts() -> List[Dict[str, int | str]]:

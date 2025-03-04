@@ -121,6 +121,11 @@ function DailyFeud({ id }: { id: string }) {
         const response = await fetch(GET_QUESTION_URL(id));
         const data = await response.json();
 
+        if (!response.ok) {
+          // Learn more about HTTP errors so this makes more sense.
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
         dispatch({
           type: "init_question",
           payload: { prompt: data.prompt, answerCount: data.count },
@@ -229,10 +234,9 @@ function DailyFeud({ id }: { id: string }) {
     }
   };
 
-  // Add a skeleton loader at some point to fill in while the question is being fetched.
   return (
     <div className="flex w-full flex-col items-center gap-4 p-2 text-center">
-      <h1 className="flow-row flex w-full items-center justify-center gap-4 rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black text-black dark:bg-blue-600 dark:text-white">
+      <h1 className="flow-row flex w-full items-center justify-center gap-2 rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black text-black dark:bg-blue-600 dark:text-white">
         {state.prompt.toUpperCase() || (
           <>
             <span> LOADING QUESTION</span>
