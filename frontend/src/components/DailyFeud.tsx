@@ -218,17 +218,34 @@ function DailyFeud({ id }: { id: string }) {
     });
   };
 
+  const getPlaceholderText = (status: State["gameStatus"]) => {
+    switch (status) {
+      case "playing":
+        return "ENTER A GUESS...";
+      case "initializing":
+        return "LOADING...";
+      default:
+        return "GAME OVER";
+    }
+  };
+
   // Add a skeleton loader at some point to fill in while the question is being fetched.
   return (
     <div className="flex w-full flex-col items-center gap-4 p-2 text-center">
-      <h1 className="w-full rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black text-black dark:bg-blue-600 dark:text-white">
-        {state.prompt.toUpperCase()}
+      <h1 className="flow-row flex w-full items-center justify-center gap-4 rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black text-black dark:bg-blue-600 dark:text-white">
+        {state.prompt.toUpperCase() || (
+          <>
+            <span> LOADING QUESTION</span>
+            <i className="fa-solid fa-circle-notch animate-spin"></i>
+          </>
+        )}
       </h1>
 
       <div className="flex w-full flex-row gap-2">
         <div className="flex w-1/2 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black dark:bg-zinc-700 dark:text-white">
           <span>SCORE:</span>
           <CountUp
+            start={0}
             end={state.answers.reduce(
               (acc: any, curr: any) =>
                 curr.isCorrect ? acc + curr.value : acc,
@@ -266,15 +283,15 @@ function DailyFeud({ id }: { id: string }) {
               payload: e.target.value,
             })
           }
-          placeholder={state.strikes >= 3 ? "GAME OVER" : "ENTER A GUESS..."}
+          placeholder={getPlaceholderText(state.gameStatus)}
           className="w-3/4 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black dark:bg-zinc-700 dark:text-white"
-          disabled={state.strikes >= 3}
+          disabled={state.gameStatus !== "playing"}
         />
         <input
           type="submit"
           value="GUESS"
           className="w-1/4 cursor-pointer rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold overflow-ellipsis text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
-          disabled={!state.guess.trim() || state.strikes >= 3}
+          disabled={!state.guess.trim() || state.gameStatus !== "playing"}
         />
       </form>
 
