@@ -4,6 +4,7 @@ import CountUp from "react-countup";
 import AnswerBox from "./AnswerBox";
 import correct from "../assets/correct.mp3";
 import wrong from "../assets/wrong.mp3";
+import ResultsModal from "./ResultsModal";
 
 const BASE_URL = "http://127.0.0.1:8000";
 const GET_QUESTION_URL = (id: string): string =>
@@ -234,9 +235,18 @@ function DailyFeud({ id }: { id: string }) {
     }
   };
 
+  const getScore = () => 
+    state.answers.reduce(
+      (acc: any, curr: any) =>
+        curr.isCorrect ? acc + curr.value : acc,
+      0,
+    );
+
   return (
     <div className="flex w-full flex-col items-center gap-4 p-2 text-center">
-      <h1 className="flow-row flex w-full items-center justify-center gap-2 rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black text-black dark:bg-blue-600 dark:text-white">
+      
+
+      <h1 className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black text-black dark:bg-blue-600 dark:text-white">
         {state.prompt.toUpperCase() || (
           <>
             <span> LOADING QUESTION</span>
@@ -250,11 +260,7 @@ function DailyFeud({ id }: { id: string }) {
           <span>SCORE:</span>
           <CountUp
             start={0}
-            end={state.answers.reduce(
-              (acc: any, curr: any) =>
-                curr.isCorrect ? acc + curr.value : acc,
-              0,
-            )}
+            end={getScore()}
             duration={0.5}
             preserveValue={true}
           />
@@ -305,6 +311,16 @@ function DailyFeud({ id }: { id: string }) {
       >
         QUESTION ARCHIVE
       </Link>
+
+      <ResultsModal
+        id={id}
+        score={getScore()}
+        strikes={state.strikes}
+        isCorrect={state.answers.map((a) => a.isCorrect)}
+        isOpen={state.gameStatus === "won" || state.gameStatus === "lost"}
+        onClose={() => null}
+      />
+      
     </div>
   );
 }

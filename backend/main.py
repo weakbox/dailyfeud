@@ -80,7 +80,7 @@ async def submit_guess(request: GuessRequest) -> dict:
 
         best_match, best_score = process.extractOne(guess, flat_answer_set.keys(), scorer=fuzz.token_set_ratio)
 
-        print("TheFuzz Scoring Opinion: ", best_match, flat_answer_set[best_match], best_score)
+        print("TheFuzz Scoring Opinion: ", f"{guess} -> {best_match}", flat_answer_set[best_match], best_score)
 
         if best_score >= THRESHOLD:
             return {
