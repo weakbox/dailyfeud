@@ -34,6 +34,7 @@ function buildResultsString(isCorrect: boolean[]) {
   return rows.join("\n");
 }
 
+
 function ResultsModal({
   id,
   score,
@@ -64,10 +65,10 @@ function ResultsModal({
         <div className="flex flex-col items-center gap-4">
           <h2 className="border-b-2 text-2xl font-black">RESULTS</h2>
 
-          {/* Sharing text that can be copied. */}
+          {/* Sharing text that can be copied. TODO: Add toast on click. */}
           <div
             ref={copyRef}
-            className="cursor-pointer rounded-md bg-zinc-100 px-4 py-2 dark:bg-zinc-700"
+            className="cursor-pointer rounded-md bg-zinc-100 px-4 py-2 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600"
             onClick={copyToClipboard}
           >
             <div>
@@ -82,9 +83,9 @@ function ResultsModal({
           <div className="flex w-full flex-col gap-2 text-center sm:flex-row">
             <button
               onClick={onClose}
-              className="w-full rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
+              className="w-full cursor-pointer rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
             >
-              VIEW BOARD
+              VIEW ANSWERS
             </button>
             <Link
               to="/archive"

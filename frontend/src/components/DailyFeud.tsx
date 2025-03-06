@@ -24,6 +24,7 @@ interface State {
   }[];
   guess: string;
   gameStatus: "initializing" | "playing" | "won" | "lost";
+  resultsModalIsOpen: boolean;
 }
 
 interface Action {
@@ -33,7 +34,8 @@ interface Action {
     | "update_guess"
     | "update_answer"
     | "end_game"
-    | "fill_answers";
+    | "fill_answers"
+    | "toggle_results_modal";
   payload?: any;
 }
 
@@ -72,7 +74,11 @@ function reducer(state: State, action: Action): State {
       };
     }
     case "end_game": {
-      return { ...state, gameStatus: action.payload };
+      return {
+        ...state,
+        gameStatus: action.payload,
+        resultsModalIsOpen: !state.resultsModalIsOpen,
+      };
     }
     case "fill_answers": {
       return {
@@ -88,6 +94,9 @@ function reducer(state: State, action: Action): State {
               },
         ),
       };
+    }
+    case "toggle_results_modal": {
+      return { ...state, resultsModalIsOpen: !state.resultsModalIsOpen };
     }
     default:
       throw Error("Unknown action: " + action.type);
@@ -111,6 +120,7 @@ function DailyFeud({ id }: { id: string }) {
     answers: [],
     guess: "",
     gameStatus: "initializing",
+    resultsModalIsOpen: false,
   });
   const correctRef = useRef(new Audio(correct));
   const wrongRef = useRef(new Audio(wrong));
@@ -235,17 +245,14 @@ function DailyFeud({ id }: { id: string }) {
     }
   };
 
-  const getScore = () => 
+  const getScore = () =>
     state.answers.reduce(
-      (acc: any, curr: any) =>
-        curr.isCorrect ? acc + curr.value : acc,
+      (acc: any, curr: any) => (curr.isCorrect ? acc + curr.value : acc),
       0,
     );
 
   return (
     <div className="flex w-full flex-col items-center gap-4 p-2 text-center">
-      
-
       <h1 className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black text-black dark:bg-blue-600 dark:text-white">
         {state.prompt.toUpperCase() || (
           <>
@@ -297,12 +304,23 @@ function DailyFeud({ id }: { id: string }) {
           className="w-3/4 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black dark:bg-zinc-700 dark:text-white"
           disabled={state.gameStatus !== "playing"}
         />
-        <input
-          type="submit"
-          value="GUESS"
-          className="w-1/4 cursor-pointer rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold overflow-ellipsis text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
-          disabled={!state.guess.trim() || state.gameStatus !== "playing"}
-        />
+        {/* Button changes from form submission to modal toggling on game-over. */}
+        {state.gameStatus === "won" || state.gameStatus === "lost" ? (
+          <button
+            type="button" // Prevents form submission!
+            className="w-1/4 cursor-pointer rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold overflow-ellipsis text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
+            onClick={() => dispatch({ type: "toggle_results_modal" })}
+          >
+            VIEW RESULTS
+          </button>
+        ) : (
+          <input
+            type="submit"
+            value="GUESS"
+            className="w-1/4 cursor-pointer rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold overflow-ellipsis text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
+            disabled={!state.guess.trim() || state.gameStatus !== "playing"}
+          />
+        )}
       </form>
 
       <Link
@@ -317,10 +335,9 @@ function DailyFeud({ id }: { id: string }) {
         score={getScore()}
         strikes={state.strikes}
         isCorrect={state.answers.map((a) => a.isCorrect)}
-        isOpen={state.gameStatus === "won" || state.gameStatus === "lost"}
-        onClose={() => null}
+        isOpen={state.resultsModalIsOpen}
+        onClose={() => dispatch({ type: "toggle_results_modal" })}
       />
-      
     </div>
   );
 }
