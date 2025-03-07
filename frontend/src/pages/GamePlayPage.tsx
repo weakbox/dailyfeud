@@ -12,7 +12,9 @@ function GamePlayPage() {
   return (
     <>
       <Header />
-      <DailyFeud id={id} />
+      <main className="flex justify-center">
+        <DailyFeud id={id} />
+      </main>
       <Footer />
     </>
   );

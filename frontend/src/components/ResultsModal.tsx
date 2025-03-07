@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router";
+import { motion, AnimatePresence } from "motion/react";
 
 type ResultsModalProps = {
   id: string;
@@ -34,7 +35,6 @@ function buildResultsString(isCorrect: boolean[]) {
   return rows.join("\n");
 }
 
-
 function ResultsModal({
   id,
   score,
@@ -46,10 +46,6 @@ function ResultsModal({
   const portalRoot = document.getElementById("portal-root");
   const copyRef = useRef<HTMLDivElement>(null);
 
-  if (!isOpen || !portalRoot) {
-    return null;
-  }
-
   const copyToClipboard = () => {
     if (!copyRef.current) {
       return;
@@ -59,44 +55,75 @@ function ResultsModal({
     navigator.clipboard.writeText(text);
   };
 
+  // TypeScript will complain unless we ensure the portalRoot exists.
+  if (!portalRoot) {
+    return null;
+  }
+
   return createPortal(
-    <div className="fixed inset-0 flex items-center justify-center bg-white/85 p-4 dark:bg-zinc-800/90">
-      <div className="w-3/4 max-w-md rounded-md border-2 border-b-4 border-black bg-white p-4 dark:bg-zinc-800 dark:text-white">
-        <div className="flex flex-col items-center gap-4">
-          <h2 className="border-b-2 text-2xl font-black">RESULTS</h2>
-
-          {/* Sharing text that can be copied. TODO: Add toast on click. */}
-          <div
-            ref={copyRef}
-            className="cursor-pointer rounded-md bg-zinc-100 px-4 py-2 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600"
-            onClick={copyToClipboard}
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          key="results-modal-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 flex items-start justify-center overflow-y-auto bg-white/85 p-4 dark:bg-zinc-800/85"
+          onClick={onClose}
+        >
+          <motion.div
+            key="results-modal"
+            initial={{ y: -20 }}
+            animate={{ y: 0 }}
+            exit={{ y: -20 }}
+            className="mt-24 w-3/4 max-w-md rounded-md border-2 border-b-4 border-black bg-white p-4 dark:bg-zinc-800 dark:text-white"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div>
-              DailyFeud {id}: {score}/100
-            </div>
-            <div>Strikes Used: {strikes}</div>
-            <div className="whitespace-pre-wrap">
-              {buildResultsString(isCorrect)}
-            </div>
-          </div>
+            <div className="flex flex-col items-center gap-4">
+              <h2 className="border-b-2 text-2xl font-black">RESULTS</h2>
 
-          <div className="flex w-full flex-col gap-2 text-center sm:flex-row">
-            <button
-              onClick={onClose}
-              className="w-full cursor-pointer rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
-            >
-              VIEW ANSWERS
-            </button>
-            <Link
-              to="/archive"
-              className="w-full rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
-            >
-              QUESTION ARCHIVE
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>,
+              <p>
+                {strikes < 3
+                  ? "Great work getting all the answers!"
+                  : "Better luck next time!"}
+              </p>
+
+              {/* Sharing text that can be copied. TODO: Add toast on click. */}
+              <div
+                ref={copyRef}
+                className="cursor-pointer rounded-md bg-zinc-100 px-4 py-2 hover:bg-zinc-200 dark:bg-zinc-700 dark:hover:bg-zinc-600"
+                onClick={copyToClipboard}
+              >
+                <div>
+                  DailyFeud {id}: {score}/100
+                </div>
+                <div>Strikes Used: {strikes}</div>
+                <div className="whitespace-pre-wrap">
+                  {buildResultsString(isCorrect)}
+                </div>
+              </div>
+
+              <p>Click to copy results to clipboard.</p>
+
+              <div className="flex w-full flex-col gap-2 text-center sm:flex-row">
+                <button
+                  onClick={onClose}
+                  className="w-full cursor-pointer rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
+                >
+                  VIEW ANSWERS
+                </button>
+                <Link
+                  to="/archive"
+                  className="w-full rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
+                >
+                  QUESTION ARCHIVE
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
     portalRoot,
   );
 }

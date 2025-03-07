@@ -11,16 +11,29 @@ export function Header() {
 export function Footer() {
   return (
     <footer className="sticky top-full mt-8 flex items-center justify-center border-t-2 border-black bg-white px-4 py-2 text-xs text-black dark:bg-zinc-700 dark:text-white">
-      <span className="text-gray-500">
-        I'm looking for a job! Find me on LinkedIn:{" "}
+      <p className="text-zinc-500">
+        I'm looking for a job! Want to reach out?{" "}
         <a
           className="underline"
+          href="mailto:connor@weakbox.com"
+        >
+          connor@weakbox.com
+        </a>
+        {" "}
+        <a
           href="https://www.linkedin.com/in/weakbox/"
           target="_blank"
         >
-          Connor McLeod
+          <i className="fa-brands fa-linkedin"></i>
         </a>
-      </span>
+        {" "}
+        <a
+          href="https://github.com/weakbox"
+          target="_blank"
+        >
+          <i className="fa-brands fa-github"></i>
+        </a>
+      </p>
     </footer>
   );
 }

@@ -5,6 +5,7 @@ import AnswerBox from "./AnswerBox";
 import correct from "../assets/correct.mp3";
 import wrong from "../assets/wrong.mp3";
 import ResultsModal from "./ResultsModal";
+import { motion } from "motion/react";
 
 const BASE_URL = "http://127.0.0.1:8000";
 const GET_QUESTION_URL = (id: string): string =>
@@ -252,7 +253,7 @@ function DailyFeud({ id }: { id: string }) {
     );
 
   return (
-    <div className="flex w-full flex-col items-center gap-4 p-2 text-center">
+    <div className="flex w-full max-w-2xl flex-col items-center gap-4 p-2 text-center">
       <h1 className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black text-black dark:bg-blue-600 dark:text-white">
         {state.prompt.toUpperCase() || (
           <>
@@ -262,6 +263,7 @@ function DailyFeud({ id }: { id: string }) {
         )}
       </h1>
 
+      {/* Score and strikes button container. */}
       <div className="flex w-full flex-row gap-2">
         <div className="flex w-1/2 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black dark:bg-zinc-700 dark:text-white">
           <span>SCORE:</span>
@@ -272,8 +274,18 @@ function DailyFeud({ id }: { id: string }) {
             preserveValue={true}
           />
         </div>
-
-        <div className="flex w-1/2 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-red-300 px-4 py-2 font-bold text-black dark:bg-red-500 dark:text-white">
+        <motion.div
+          key={state.strikes} // Triggers an animation on state change.
+          animate={state.strikes > 0 ? "shake" : "rest"}
+          variants={{
+            rest: { x: 0 },
+            shake: {
+              x: [-5, 5, -1, 1, 0],
+              transition: { type: "keyframes", duration: 0.25 },
+            },
+          }}
+          className="flex w-1/2 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-red-300 px-4 py-2 font-bold text-black dark:bg-red-500 dark:text-white"
+        >
           <span>{state.strikes ? "STRIKES:" : "NO STRIKES"}</span>
           {Array.from({ length: state.strikes }, (_, i) => (
             <i
@@ -281,7 +293,7 @@ function DailyFeud({ id }: { id: string }) {
               className="fa-solid fa-xmark text-red-600 dark:text-white"
             ></i>
           ))}
-        </div>
+        </motion.div>
       </div>
 
       {/* These classes are implemented pretty badly I think. */}
