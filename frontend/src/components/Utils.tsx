@@ -1,3 +1,7 @@
+import { AnimatePresence, motion } from "motion/react";
+import toast from "react-hot-toast";
+import { toastVariants } from "../utils/animations";
+
 export function Header() {
   return (
     <header className="mb-8 flex items-center justify-between border-b-2 border-black bg-white px-4 py-2 text-black dark:bg-zinc-700 dark:text-white">
@@ -37,3 +41,37 @@ export function Footer() {
     </footer>
   );
 }
+
+export const showSuccessToast = (message: string) =>
+  toast.custom((t) => (
+    <AnimatePresence>
+      {t.visible && (
+        <motion.div
+          variants={toastVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="rounded-md border-2 border-b-4 border-black bg-green-300 px-4 py-2 text-center font-bold text-black dark:bg-green-600 dark:text-white"
+        >
+          {message}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  ));
+
+export const showErrorToast = (message: string) =>
+  toast.custom((t) => (
+    <AnimatePresence>
+      {t.visible && (
+        <motion.div
+          variants={toastVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="rounded-md border-2 border-b-4 border-black bg-red-300 px-4 py-2 text-center font-bold text-black dark:bg-red-500 dark:text-white"
+        >
+          {message}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  ));

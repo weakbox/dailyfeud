@@ -2,9 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { Header, Footer } from "../components/Utils";
 import { motion, AnimatePresence } from "motion/react";
-
-// Move to .env later on.
-const URL = "http://127.0.0.1:8000/get-all-question-prompts";
+import { GET_ALL_ANSWER_PROMPTS_URL } from "../utils/api";
 
 const variants = {
   hidden: {
@@ -41,7 +39,7 @@ function ArchivePage() {
   useEffect(() => {
     const fetchPrompts = async () => {
       try {
-        const response = await fetch(URL);
+        const response = await fetch(GET_ALL_ANSWER_PROMPTS_URL);
         const data = await response.json();
         setPrompts(data);
       } catch (error) {

@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
+import { showSuccessToast } from "./Utils";
 
 type ResultsModalProps = {
   id: string;
@@ -35,6 +36,8 @@ function buildResultsString(isCorrect: boolean[]) {
   return rows.join("\n");
 }
 
+
+
 function ResultsModal({
   id,
   score,
@@ -53,6 +56,7 @@ function ResultsModal({
 
     const text = copyRef.current.innerText;
     navigator.clipboard.writeText(text);
+    showSuccessToast("RESULTS COPIED TO CLIPBOARD");
   };
 
   // TypeScript will complain unless we ensure the portalRoot exists.
@@ -75,7 +79,7 @@ function ResultsModal({
             key="results-modal"
             initial={{ y: -20 }}
             animate={{ y: 0 }}
-            exit={{ y: -20 }}
+            exit={{ y: -50, transition: { type: "tween", ease: "easeIn" } }}
             className="mt-24 w-3/4 max-w-md rounded-md border-2 border-b-4 border-black bg-white p-4 dark:bg-zinc-800 dark:text-white"
             onClick={(e) => e.stopPropagation()}
           >
@@ -88,7 +92,7 @@ function ResultsModal({
                   : "Better luck next time!"}
               </p>
 
-              {/* Sharing text that can be copied. TODO: Add toast on click. */}
+              {/* Sharing text that can be copied. */}
               <div
                 ref={copyRef}
                 className="cursor-pointer rounded-md bg-zinc-100 px-4 py-2 hover:bg-zinc-200 dark:bg-zinc-700 dark:hover:bg-zinc-600"

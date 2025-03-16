@@ -1,4 +1,7 @@
+import { Answer } from "../utils/types";
+
 type AnswerBoxProps = {
+  ref: React.RefObject<HTMLDivElement>;
   index: number;
   answer: {
     isRevealed: boolean;
@@ -23,11 +26,15 @@ const AnsweredBox = ({ answer }: { answer: Answer }) => (
   </div>
 );
 
-const AnswerBox = ({ index, answer }: AnswerBoxProps) =>
-  answer.isRevealed ? (
-    <AnsweredBox answer={answer} />
-  ) : (
-    <UnansweredBox index={index} />
-  );
+const AnswerBox = ({ index, answer, ...props }: AnswerBoxProps) => (
+  // This ref is required for Motion to work correctly with custom components (took me ages to figure out).
+  <div ref={props.ref}> 
+    {answer.isRevealed ? (
+      <AnsweredBox answer={answer} />
+    ) : (
+      <UnansweredBox index={index} />
+    )}
+  </div>
+);
 
 export default AnswerBox;

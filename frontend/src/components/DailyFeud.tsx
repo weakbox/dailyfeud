@@ -1,46 +1,27 @@
 import { useEffect, useRef, useReducer } from "react";
 import { Link } from "react-router";
+import { motion } from "motion/react";
 import CountUp from "react-countup";
+import { Toaster } from "react-hot-toast";
+
 import AnswerBox from "./AnswerBox";
+import ResultsModal from "./ResultsModal";
+
 import correct from "../assets/correct.mp3";
 import wrong from "../assets/wrong.mp3";
-import ResultsModal from "./ResultsModal";
-import { motion } from "motion/react";
 
-const BASE_URL = "http://127.0.0.1:8000";
-const GET_QUESTION_URL = (id: string): string =>
-  `${BASE_URL}/get-question-prompt/${id}`;
-const GET_ANSWERS_URL = (id: string): string =>
-  `${BASE_URL}/get-all-answers/${id}`;
-const POST_GUESS_URL = `${BASE_URL}/submit-guess/`;
+import { getAnswersUrl, getQuestionUrl, POST_GUESS_URL } from "../utils/api";
+import {
+  answerContainerVariants,
+  answerVariants,
+  strikeVariants,
+} from "../utils/animations";
+import { GameAction, GameState } from "../utils/types";
+import { showErrorToast } from "./Utils";
 
-interface State {
-  prompt: string;
-  strikes: number;
-  answers: {
-    isRevealed: boolean;
-    isCorrect: boolean;
-    text: string;
-    value: number;
-  }[];
-  guess: string;
-  gameStatus: "initializing" | "playing" | "won" | "lost";
-  resultsModalIsOpen: boolean;
-}
+const MotionAnswerBox = motion.create(AnswerBox);
 
-interface Action {
-  type:
-    | "init_question"
-    | "add_strike"
-    | "update_guess"
-    | "update_answer"
-    | "end_game"
-    | "fill_answers"
-    | "toggle_results_modal";
-  payload?: any;
-}
-
-function reducer(state: State, action: Action): State {
+function reducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case "init_question": {
       const { prompt, answerCount } = action.payload;
@@ -104,92 +85,55 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-// Play a sound effect from a provided audio element reference.
-const playSound = (ref: React.RefObject<HTMLAudioElement>) => {
-  if (!ref.current) return;
-
-  ref.current.currentTime = 0;
-  ref.current.play().catch((error) => {
-    console.error("Error playing audio:", error);
-  });
-};
-
 function DailyFeud({ id }: { id: string }) {
   const [state, dispatch] = useReducer(reducer, {
     prompt: "",
     strikes: 0,
     answers: [],
     guess: "",
-    gameStatus: "initializing",
+    gameStatus: "loading",
     resultsModalIsOpen: false,
   });
   const correctRef = useRef(new Audio(correct));
   const wrongRef = useRef(new Audio(wrong));
 
-  // Fetch question from backend on component mount.
-  useEffect(() => {
-    const fetchQuestion = async () => {
-      try {
-        const response = await fetch(GET_QUESTION_URL(id));
-        const data = await response.json();
+  // Helper functions:
+  const playSound = (ref: React.RefObject<HTMLAudioElement>) => {
+    if (!ref.current) return;
 
-        if (!response.ok) {
-          // Learn more about HTTP errors so this makes more sense.
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+    ref.current.currentTime = 0;
+    ref.current.play().catch((error) => {
+      console.error("Error playing audio:", error);
+    });
+  };
 
-        dispatch({
-          type: "init_question",
-          payload: { prompt: data.prompt, answerCount: data.count },
-        });
-      } catch (error) {
-        console.error("Error fetching question:", error);
-      }
-    };
+  const getScore = () =>
+    state.answers.reduce(
+      (acc: any, curr: any) => (curr.isCorrect ? acc + curr.value : acc),
+      0,
+    );
 
-    fetchQuestion();
-  }, []);
-
-  // Check for game over conditions from both the answer array and strikes:
-  useEffect(() => {
-    if (state.gameStatus !== "playing") {
-      return;
+  const getPlaceholderText = (status: GameState["gameStatus"]) => {
+    switch (status) {
+      case "playing":
+        return "ENTER A GUESS...";
+      case "loading":
+        return "LOADING...";
+      default:
+        return "GAME OVER";
     }
+  };
 
-    if (state.answers.every((a) => a.isCorrect === true)) {
-      dispatch({ type: "end_game", payload: "won" });
-    } else if (state.strikes >= 3) {
-      dispatch({ type: "end_game", payload: "lost" });
-    }
-  }, [state.answers, state.strikes]);
-
-  // Reveal missed answers one by one when the game is over:
-  useEffect(() => {
-    if (state.gameStatus !== "lost") {
-      return;
-    }
-
-    const fetchAnswers = async () => {
-      try {
-        const response = await fetch(GET_ANSWERS_URL(id));
-        const data = await response.json();
-        dispatch({
-          type: "fill_answers",
-          payload: data,
-        });
-      } catch (error) {
-        console.error("Error fetching question:", error);
-      }
-    };
-
-    fetchAnswers();
-  }, [state.gameStatus]);
-
-  // Dynamically generate "count" number of answer boxes.
-  const generateBoxes = (count: number) =>
-    Array.from({ length: count }, (_, i) => (
-      <AnswerBox key={i} index={i} answer={state.answers[i]} />
+  const generateBoxes = (count: number) => {
+    return Array.from({ length: count }, (_, i) => (
+      <MotionAnswerBox
+        variants={answerVariants}
+        key={i}
+        index={i}
+        answer={state.answers[i]}
+      />
     ));
+  };
 
   // Handle form submission for guessing the answer.
   const handleGuess = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -235,22 +179,65 @@ function DailyFeud({ id }: { id: string }) {
     });
   };
 
-  const getPlaceholderText = (status: State["gameStatus"]) => {
-    switch (status) {
-      case "playing":
-        return "ENTER A GUESS...";
-      case "initializing":
-        return "LOADING...";
-      default:
-        return "GAME OVER";
-    }
-  };
+  // Fetch question from backend when component mounts:
+  useEffect(() => {
+    const fetchQuestion = async () => {
+      try {
+        const response = await fetch(getQuestionUrl(id));
+        const data = await response.json();
 
-  const getScore = () =>
-    state.answers.reduce(
-      (acc: any, curr: any) => (curr.isCorrect ? acc + curr.value : acc),
-      0,
-    );
+        if (!response.ok) {
+          // Learn more about HTTP errors so this makes more sense.
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        dispatch({
+          type: "init_question",
+          payload: { prompt: data.prompt, answerCount: data.count },
+        });
+      } catch (error) {
+        showErrorToast(`Error fetching question: ${error}`);
+        console.error("Error fetching question:", error);
+      }
+    };
+
+    fetchQuestion();
+  }, []);
+
+  // Check if either game-over condition was triggered from the answer array or strikes:
+  useEffect(() => {
+    if (state.gameStatus !== "playing") {
+      return;
+    }
+
+    if (state.answers.every((a) => a.isCorrect === true)) {
+      dispatch({ type: "end_game", payload: "won" });
+    } else if (state.strikes >= 3) {
+      dispatch({ type: "end_game", payload: "lost" });
+    }
+  }, [state.answers, state.strikes]);
+
+  // Reveal missed answers on game-over:
+  useEffect(() => {
+    if (state.gameStatus !== "lost") {
+      return;
+    }
+
+    const fetchAnswers = async () => {
+      try {
+        const response = await fetch(getAnswersUrl(id));
+        const data = await response.json();
+        dispatch({
+          type: "fill_answers",
+          payload: data,
+        });
+      } catch (error) {
+        console.error("Error fetching question:", error);
+      }
+    };
+
+    fetchAnswers();
+  }, [state.gameStatus]);
 
   return (
     <div className="flex w-full max-w-2xl flex-col items-center gap-4 p-2 text-center">
@@ -277,13 +264,7 @@ function DailyFeud({ id }: { id: string }) {
         <motion.div
           key={state.strikes} // Triggers an animation on state change.
           animate={state.strikes > 0 ? "shake" : "rest"}
-          variants={{
-            rest: { x: 0 },
-            shake: {
-              x: [-5, 5, -1, 1, 0],
-              transition: { type: "keyframes", duration: 0.25 },
-            },
-          }}
+          variants={strikeVariants}
           className="flex w-1/2 items-center justify-center gap-1 rounded-md border-2 border-b-4 border-black bg-red-300 px-4 py-2 font-bold text-black dark:bg-red-500 dark:text-white"
         >
           <span>{state.strikes ? "STRIKES:" : "NO STRIKES"}</span>
@@ -296,52 +277,66 @@ function DailyFeud({ id }: { id: string }) {
         </motion.div>
       </div>
 
-      {/* These classes are implemented pretty badly I think. */}
-      <div className="grid w-full auto-rows-auto grid-cols-1 gap-2 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-4">
-        {generateBoxes(state.answers.length)}
-      </div>
+      {/* The grid implementation probably could use some work. The conditional rendering ensures that the animation starts once the content is actually loaded. */}
+      {state.gameStatus !== "loading" && (
+        <motion.div
+          variants={answerContainerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid w-full auto-rows-auto grid-cols-1 gap-2 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-4"
+        >
+          {generateBoxes(state.answers.length)}
+        </motion.div>
+      )}
 
-      <form onSubmit={handleGuess} className="flex w-full flex-row gap-2">
-        <input
-          type="text"
-          value={state.guess}
-          maxLength={32}
-          onChange={(e) =>
-            dispatch({
-              type: "update_guess",
-              payload: e.target.value,
-            })
-          }
-          placeholder={getPlaceholderText(state.gameStatus)}
-          className="w-3/4 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black dark:bg-zinc-700 dark:text-white"
-          disabled={state.gameStatus !== "playing"}
-        />
-        {/* Button changes from form submission to modal toggling on game-over. */}
-        {state.gameStatus === "won" || state.gameStatus === "lost" ? (
-          <button
-            type="button" // Prevents form submission!
-            className="w-1/4 cursor-pointer rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold overflow-ellipsis text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
-            onClick={() => dispatch({ type: "toggle_results_modal" })}
-          >
-            VIEW RESULTS
-          </button>
-        ) : (
-          <input
-            type="submit"
-            value="GUESS"
-            className="w-1/4 cursor-pointer rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold overflow-ellipsis text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
-            disabled={!state.guess.trim() || state.gameStatus !== "playing"}
-          />
-        )}
-      </form>
-
-      <Link
-        to="/archive"
-        className="w-full rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
+      <motion.div
+        layout="position"
+        transition={{ duration: 1, type: "spring" }}
+        className="flex w-full flex-col gap-2"
       >
-        QUESTION ARCHIVE
-      </Link>
+        <form onSubmit={handleGuess} className="flex gap-2">
+          <input
+            type="text"
+            value={state.guess}
+            maxLength={32}
+            onChange={(e) =>
+              dispatch({
+                type: "update_guess",
+                payload: e.target.value,
+              })
+            }
+            placeholder={getPlaceholderText(state.gameStatus)}
+            className="w-3/4 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black dark:bg-zinc-700 dark:text-white"
+            disabled={state.gameStatus !== "playing"}
+          />
+          {/* Button changes from form submission to modal toggling on game-over. */}
+          {state.gameStatus === "won" || state.gameStatus === "lost" ? (
+            <button
+              type="button" // Prevents form submission!
+              className="w-1/4 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
+              onClick={() => dispatch({ type: "toggle_results_modal" })}
+            >
+              VIEW RESULTS
+            </button>
+          ) : (
+            <input
+              type="submit"
+              value="GUESS"
+              className="w-1/4 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
+              disabled={!state.guess.trim() || state.gameStatus !== "playing"}
+            />
+          )}
+        </form>
+        <Link
+          to="/archive"
+          className="rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
+        >
+          QUESTION ARCHIVE
+        </Link>
+      </motion.div>
 
+      {/* Renders toast notifications from around the app. Should this be in a different spot? */}
+      <Toaster />
       <ResultsModal
         id={id}
         score={getScore()}
