@@ -36,8 +36,6 @@ function buildResultsString(isCorrect: boolean[]) {
   return rows.join("\n");
 }
 
-
-
 function ResultsModal({
   id,
   score,

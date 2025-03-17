@@ -43,6 +43,7 @@ function StrikesBox({ strikes }: StrikeBoxProps) {
   );
 }
 
+// I think this component is sort of dumb.
 export function Scoreboard({ score, strikes }: ScoreboardProps) {
   return (
     <div className="flex w-full flex-row gap-2">

@@ -16,7 +16,7 @@ export const gameReducer = (
           text: "",
           value: 0,
         }),
-        gameStatus: "playing",
+        gameStatus: "PLAYING",
       };
     }
     case "add_strike": {
@@ -26,37 +26,28 @@ export const gameReducer = (
       return { ...state, guess: action.payload.toUpperCase() };
     }
     case "update_answer": {
-      const { position, text, value } = action.payload;
+      const { position, text, value, isCorrect } = action.payload;
       return {
         ...state,
         answers: state.answers.map((a, i) => ({
           isRevealed: i + 1 === position ? true : a.isRevealed,
-          isCorrect: i + 1 === position ? true : a.isCorrect,
+          isCorrect: i + 1 === position ? isCorrect : a.isCorrect,
           text: i + 1 === position ? text.toUpperCase() : a.text,
           value: i + 1 === position ? value : a.value,
         })),
       };
     }
+    case "reveal_answers": {
+      return {
+        ...state,
+        gameStatus: "REVEALING",
+      };
+    }
     case "end_game": {
       return {
         ...state,
-        gameStatus: action.payload,
+        gameStatus: "GAME_OVER",
         resultsModalIsOpen: !state.resultsModalIsOpen,
-      };
-    }
-    case "fill_answers": {
-      return {
-        ...state,
-        answers: state.answers.map((answer, i) =>
-          answer.isCorrect
-            ? answer
-            : {
-                isRevealed: true,
-                isCorrect: false,
-                text: action.payload[i].answer.toUpperCase(),
-                value: action.payload[i].points,
-              },
-        ),
       };
     }
     case "toggle_results_modal": {

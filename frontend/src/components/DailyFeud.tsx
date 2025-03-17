@@ -12,16 +12,17 @@ import { getAnswersUrl, getQuestionUrl } from "../utils/api";
 import { showErrorToast } from "./Utils";
 import { answerContainerVariants, answerVariants } from "../utils/animations";
 import { gameReducer } from "../utils/dailyFeudReducer";
+import { Answer } from "../utils/types";
 
 const MotionAnswerBox = motion.create(AnswerBox);
 
-function DailyFeud({ id }: { id: string }) {
+export function DailyFeud({ id }: { id: string }) {
   const [state, dispatch] = useReducer(gameReducer, {
     prompt: "",
     strikes: 0,
     answers: [],
     guess: "",
-    gameStatus: "loading",
+    gameStatus: "LOADING",
     resultsModalIsOpen: false,
   });
 
@@ -40,6 +41,33 @@ function DailyFeud({ id }: { id: string }) {
         answer={state.answers[i]}
       />
     ));
+  };
+
+  const revealAnswersSequentially = (answers: Answer[]) => {
+    let timeoutDelay = 500;
+
+    // The answer type coming from the API differs from the one defined in the frontend. Fix later.
+    answers.forEach((answer: any, index: number) => {
+      if (!state?.answers[index]?.isCorrect) {
+        setTimeout(() => {
+          dispatch({
+            type: "update_answer",
+            payload: {
+              position: answer.position,
+              text: answer.answer,
+              value: answer.points,
+              isCorrect: false,
+            },
+          });
+        }, timeoutDelay);
+        timeoutDelay += 500;
+      }
+    });
+
+    // Set the timeout to enter the game over state after all the answers are revealed:
+    setTimeout(() => {
+      dispatch({ type: "end_game" });
+    }, timeoutDelay + 750);
   };
 
   // Fetch question from backend when component mounts:
@@ -67,35 +95,38 @@ function DailyFeud({ id }: { id: string }) {
     fetchQuestion();
   }, []);
 
-  // Check if either game-over condition was triggered from the answer array or strikes:
+  // Check if the game should end due to all answers being correct or reaching 3 strikes.
   useEffect(() => {
-    if (state.gameStatus !== "playing") {
+    if (state.gameStatus !== "PLAYING") {
       return;
     }
 
-    if (state.answers.every((a) => a.isCorrect === true)) {
-      dispatch({ type: "end_game", payload: "won" });
-    } else if (state.strikes >= 3) {
-      dispatch({ type: "end_game", payload: "lost" });
+    if (
+      state.answers.every((a) => a.isCorrect === true) ||
+      state.strikes >= 3
+    ) {
+      dispatch({ type: "reveal_answers" });
     }
   }, [state.answers, state.strikes]);
 
-  // Reveal missed answers on game-over:
+  // Fetch and reveal missed answers sequentially when the game enters the "REVEALING" phase.
+  // If no answers are left to reveal, this simply delays the results modal briefly.
   useEffect(() => {
-    if (state.gameStatus !== "lost") {
+    if (state.gameStatus !== "REVEALING") {
       return;
     }
 
     const fetchAnswers = async () => {
       try {
         const response = await fetch(getAnswersUrl(id));
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         const data = await response.json();
-        dispatch({
-          type: "fill_answers",
-          payload: data,
-        });
+
+        revealAnswersSequentially(data);
       } catch (error) {
-        console.error("Error fetching question:", error);
+        console.error("Error when fetching answers:", error);
       }
     };
 
@@ -118,7 +149,7 @@ function DailyFeud({ id }: { id: string }) {
       <Scoreboard score={getScore()} strikes={state.strikes} />
 
       {/* The grid implementation probably could use some work. The conditional rendering ensures that the animation starts once the content is actually loaded. */}
-      {state.gameStatus !== "loading" && (
+      {state.gameStatus !== "LOADING" && (
         <motion.div
           variants={answerContainerVariants}
           initial="hidden"
@@ -156,5 +187,3 @@ function DailyFeud({ id }: { id: string }) {
     </div>
   );
 }
-
-export default DailyFeud;

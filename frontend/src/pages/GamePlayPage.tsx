@@ -1,5 +1,5 @@
 import { useParams } from "react-router";
-import DailyFeud from "../components/DailyFeud";
+import { DailyFeud } from "../components/DailyFeud";
 import { Header, Footer } from "../components/Utils";
 
 type RouteParams = {

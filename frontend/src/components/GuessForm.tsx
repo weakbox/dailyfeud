@@ -25,9 +25,9 @@ const playSound = (ref: React.RefObject<HTMLAudioElement | null>) => {
 
 const getPlaceholderText = (status: GameState["gameStatus"]) => {
   switch (status) {
-    case "playing":
+    case "PLAYING":
       return "ENTER A GUESS...";
-    case "loading":
+    case "LOADING":
       return "LOADING...";
     default:
       return "GAME OVER";
@@ -70,6 +70,7 @@ export function GuessForm({ id, state, dispatch }: GuessFormProps) {
             position: result.position,
             text: result.answer,
             value: result.value,
+            isCorrect: true,
           },
         });
         playSound(correctRef);
@@ -101,10 +102,10 @@ export function GuessForm({ id, state, dispatch }: GuessFormProps) {
         }
         placeholder={getPlaceholderText(state.gameStatus)}
         className="w-3/4 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black dark:bg-zinc-700 dark:text-white"
-        disabled={state.gameStatus !== "playing"}
+        disabled={state.gameStatus !== "PLAYING"}
       />
       {/* Button changes from form submission to modal toggling on game-over. */}
-      {state.gameStatus === "won" || state.gameStatus === "lost" ? (
+      {state.gameStatus === "GAME_OVER" ? (
         <button
           type="button" // Prevents form submission!
           className="w-1/4 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
@@ -117,7 +118,7 @@ export function GuessForm({ id, state, dispatch }: GuessFormProps) {
           type="submit"
           value="GUESS"
           className="w-1/4 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
-          disabled={!state.guess.trim() || state.gameStatus !== "playing"}
+          disabled={!state.guess.trim() || state.gameStatus !== "PLAYING"}
         />
       )}
     </form>

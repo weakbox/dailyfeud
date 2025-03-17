@@ -10,7 +10,7 @@ export interface GameState {
   strikes: number;
   answers: Answer[];
   guess: string;
-  gameStatus: "loading" | "playing" | "won" | "lost";
+  gameStatus: "LOADING" | "PLAYING" | "REVEALING" | "GAME_OVER";
   resultsModalIsOpen: boolean;
 }
 
@@ -21,7 +21,7 @@ export interface GameAction {
     | "update_guess"
     | "update_answer"
     | "end_game"
-    | "fill_answers"
+    | "reveal_answers"
     | "toggle_results_modal";
   payload?: any;
 }
