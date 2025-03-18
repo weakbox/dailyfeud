@@ -1,7 +1,6 @@
 import { useEffect, useReducer } from "react";
 import { Link } from "react-router";
 import { motion } from "motion/react";
-import { Toaster } from "react-hot-toast";
 
 import AnswerBox from "./AnswerBox";
 import ResultsModal from "./ResultsModal";
@@ -10,9 +9,10 @@ import { GuessForm } from "./GuessForm";
 
 import { getAnswersUrl, getQuestionUrl } from "../utils/api";
 import { showErrorToast } from "./Utils";
-import { answerContainerVariants, answerVariants } from "../utils/animations";
+import { answerVariants, gameVariants } from "../utils/animations";
 import { gameReducer } from "../utils/dailyFeudReducer";
 import { Answer } from "../utils/types";
+import { span } from "motion/react-client";
 
 const MotionAnswerBox = motion.create(AnswerBox);
 
@@ -35,7 +35,7 @@ export function DailyFeud({ id }: { id: string }) {
   const generateBoxes = (count: number) => {
     return Array.from({ length: count }, (_, i) => (
       <MotionAnswerBox
-        variants={answerVariants}
+        variants={answerVariants.content}
         key={i}
         index={i}
         answer={state.answers[i]}
@@ -133,52 +133,48 @@ export function DailyFeud({ id }: { id: string }) {
     fetchAnswers();
   }, [state.gameStatus]);
 
+  const score = getScore();
+
   return (
     <div className="flex w-full max-w-2xl flex-col items-center gap-4 p-2 text-center">
-      <h1 className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black text-black dark:bg-blue-600 dark:text-white">
-        {state.prompt ? (
-          state.prompt.toUpperCase()
-        ) : (
-          <>
-            <span> LOADING QUESTION</span>
-            <i className="fa-solid fa-circle-notch animate-spin"></i>
-          </>
-        )}
-      </h1>
-
-      <Scoreboard score={getScore()} strikes={state.strikes} />
-
       {/* The grid implementation probably could use some work. The conditional rendering ensures that the animation starts once the content is actually loaded. */}
-      {state.gameStatus !== "LOADING" && (
+      {state.gameStatus === "LOADING" ? (
+        <span>Loading...</span>
+      ) : (
         <motion.div
-          variants={answerContainerVariants}
+          variants={gameVariants.container}
           initial="hidden"
           animate="visible"
-          className="grid w-full auto-rows-auto grid-cols-1 gap-2 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-4"
+          className="flex w-full flex-col items-center gap-4"
         >
-          {generateBoxes(state.answers.length)}
+          <h1 className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black text-black dark:bg-blue-600 dark:text-white">
+            {state.prompt.toUpperCase()}
+          </h1>
+          <Scoreboard score={score} strikes={state.strikes} />
+          <motion.div
+            variants={answerVariants.container}
+            initial="hidden"
+            animate="visible"
+            className="grid w-full auto-rows-auto grid-cols-1 gap-2 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-4"
+          >
+            {generateBoxes(state.answers.length)}
+          </motion.div>
+
+          <div className="flex w-full flex-col gap-2">
+            <GuessForm id={id} state={state} dispatch={dispatch} />
+            <Link
+              to="/archive"
+              className="rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
+            >
+              QUESTION ARCHIVE
+            </Link>
+          </div>
         </motion.div>
       )}
 
-      <motion.div
-        layout="position"
-        transition={{ duration: 1, type: "spring" }}
-        className="flex w-full flex-col gap-2"
-      >
-        <GuessForm id={id} state={state} dispatch={dispatch} />
-        <Link
-          to="/archive"
-          className="rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
-        >
-          QUESTION ARCHIVE
-        </Link>
-      </motion.div>
-
-      {/* Renders toast notifications from around the app. Should this be in a different spot? */}
-      <Toaster />
       <ResultsModal
         id={id}
-        score={getScore()}
+        score={score}
         strikes={state.strikes}
         isCorrect={state.answers.map((a) => a.isCorrect)}
         isOpen={state.resultsModalIsOpen}

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Link } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { showSuccessToast } from "./Utils";
+import { modalVariants } from "../utils/animations";
 
 type ResultsModalProps = {
   id: string;
@@ -66,20 +67,20 @@ function ResultsModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          key="results-modal-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          variants={modalVariants.backdrop}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
           className="fixed inset-0 flex items-start justify-center overflow-y-auto bg-white/85 p-4 dark:bg-zinc-800/85"
           onClick={onClose}
         >
           <motion.div
-            key="results-modal"
-            initial={{ y: -20 }}
-            animate={{ y: 0 }}
-            exit={{ y: -50, transition: { type: "tween", ease: "easeIn" } }}
+            variants={modalVariants.modal}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             className="mt-24 w-3/4 max-w-md rounded-md border-2 border-b-4 border-black bg-white p-4 dark:bg-zinc-800 dark:text-white"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()} // Allows onClick on backdrop to work correctly.
           >
             <div className="flex flex-col items-center gap-4">
               <h2 className="border-b-2 text-2xl font-black">RESULTS</h2>

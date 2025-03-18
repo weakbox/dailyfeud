@@ -23,17 +23,6 @@ const playSound = (ref: React.RefObject<HTMLAudioElement | null>) => {
   });
 };
 
-const getPlaceholderText = (status: GameState["gameStatus"]) => {
-  switch (status) {
-    case "PLAYING":
-      return "ENTER A GUESS...";
-    case "LOADING":
-      return "LOADING...";
-    default:
-      return "GAME OVER";
-  }
-};
-
 export function GuessForm({ id, state, dispatch }: GuessFormProps) {
   const correctRef = useRef<HTMLAudioElement | null>(null);
   const wrongRef = useRef<HTMLAudioElement | null>(null);
@@ -100,7 +89,9 @@ export function GuessForm({ id, state, dispatch }: GuessFormProps) {
             payload: e.target.value,
           })
         }
-        placeholder={getPlaceholderText(state.gameStatus)}
+        placeholder={
+          state.gameStatus == "PLAYING" ? "ENTER A GUESS..." : "GAME OVER"
+        }
         className="w-3/4 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black dark:bg-zinc-700 dark:text-white"
         disabled={state.gameStatus !== "PLAYING"}
       />
@@ -111,7 +102,7 @@ export function GuessForm({ id, state, dispatch }: GuessFormProps) {
           className="w-1/4 rounded-md border-2 border-b-4 border-black bg-white px-4 py-2 font-bold text-black hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
           onClick={() => dispatch({ type: "toggle_results_modal" })}
         >
-          VIEW RESULTS
+          RESULTS
         </button>
       ) : (
         <input
