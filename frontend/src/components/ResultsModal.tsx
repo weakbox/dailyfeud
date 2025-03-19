@@ -63,6 +63,9 @@ function ResultsModal({
     return null;
   }
 
+  // Make modal completely disappear before background fades out.
+  // And vice-versa.
+
   return createPortal(
     <AnimatePresence>
       {isOpen && (
@@ -71,14 +74,11 @@ function ResultsModal({
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="fixed inset-0 flex items-start justify-center overflow-y-auto bg-white/85 p-4 dark:bg-zinc-800/85"
+          className="fixed inset-0 flex items-start justify-center overflow-y-auto bg-white/95 p-4 dark:bg-zinc-800/95"
           onClick={onClose}
         >
           <motion.div
             variants={modalVariants.modal}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
             className="mt-24 w-3/4 max-w-md rounded-md border-2 border-b-4 border-black bg-white p-4 dark:bg-zinc-800 dark:text-white"
             onClick={(e) => e.stopPropagation()} // Allows onClick on backdrop to work correctly.
           >

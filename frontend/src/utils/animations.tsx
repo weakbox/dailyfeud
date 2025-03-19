@@ -13,7 +13,7 @@ export const answerVariants = {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2,
+        staggerChildren: 0.35,
         delay: 0.5,
         when: "beforeChildren",
       },
@@ -33,7 +33,7 @@ export const answerVariants = {
 
 // Make this shake animation better, it looks cheap right now.
 export const strikeVariants = {
-  rest: { x: 0, y: 0, },
+  rest: { x: 0, y: 0 },
   shake: {
     x: [-5, 5, -2, 2, 0],
     y: [-1, 1, 0],
@@ -44,7 +44,7 @@ export const strikeVariants = {
 export const toastVariants = {
   hidden: {
     opacity: 0,
-    y: -50,
+    y: 15,
   },
   visible: {
     opacity: 1,
@@ -57,13 +57,31 @@ export const toastVariants = {
 
 export const modalVariants = {
   backdrop: {
+    transition: { delay: 1 },
     hidden: { opacity: 0 },
-    visible: { opacity: 1 },
-    exit: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { when: "beforeChildren" },
+    },
+    exit: {
+      opacity: 0,
+      transition: {
+        when: "afterChildren",
+        delay: 0.2,
+      },
+    },
   },
   modal: {
-    hidden: { y: -20 },
-    visible: { y: 0 },
-    exit: { y: -50, transition: { type: "tween", ease: "easeIn" } },
+    transition: { delay: 1 },
+    hidden: {
+      opacity: 0,
+      y: -15,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { delay: 0.2 },
+    },
+    exit: { opacity: 0 },
   },
 };

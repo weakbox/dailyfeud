@@ -33,7 +33,8 @@ export function Footer() {
   );
 }
 
-export const showSuccessToast = (message: string) =>
+export const showSuccessToast = (message: string) => {
+  toast.dismiss();
   toast.custom((t) => (
     <AnimatePresence>
       {t.visible && (
@@ -42,15 +43,18 @@ export const showSuccessToast = (message: string) =>
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="rounded-md border-2 border-b-4 border-black bg-green-300 px-4 py-2 text-center font-bold text-black dark:bg-green-600 dark:text-white"
+          className="flex flex-row items-center justify-center gap-2 rounded-md border-2 border-b-4 border-black bg-green-300 px-4 py-2 text-center font-bold text-black dark:bg-green-600 dark:text-white"
         >
+          <i className="fa-solid fa-check"></i>
           {message}
         </motion.div>
       )}
     </AnimatePresence>
   ));
+};
 
-export const showErrorToast = (message: string) =>
+export const showErrorToast = (message: string) => {
+  toast.dismiss();
   toast.custom((t) => (
     <AnimatePresence>
       {t.visible && (
@@ -59,10 +63,12 @@ export const showErrorToast = (message: string) =>
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="rounded-md border-2 border-b-4 border-black bg-red-300 px-4 py-2 text-center font-bold text-black dark:bg-red-500 dark:text-white"
+          className="flex flex-row items-center justify-center gap-2 rounded-md border-2 border-b-4 border-black bg-red-300 px-4 py-2 text-center font-bold text-black dark:bg-red-500 dark:text-white"
         >
+          <i className="fa-solid fa-xmark"></i>
           {message}
         </motion.div>
       )}
     </AnimatePresence>
   ));
+};

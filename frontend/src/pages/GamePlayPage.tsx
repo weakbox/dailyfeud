@@ -17,7 +17,7 @@ function GamePlayPage() {
         <DailyFeud id={id} />
       </main>
       <Footer />
-      <Toaster />
+      <Toaster position="bottom-center" />
     </>
   );
 }

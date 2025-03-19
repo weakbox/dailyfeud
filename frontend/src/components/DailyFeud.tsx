@@ -2,7 +2,7 @@ import { useEffect, useReducer } from "react";
 import { Link } from "react-router";
 import { motion } from "motion/react";
 
-import AnswerBox from "./AnswerBox";
+import { AnswerBox } from "./AnswerBox";
 import ResultsModal from "./ResultsModal";
 import { Scoreboard } from "./Scoreboard";
 import { GuessForm } from "./GuessForm";
@@ -59,14 +59,14 @@ export function DailyFeud({ id }: { id: string }) {
             },
           });
         }, timeoutDelay);
-        timeoutDelay += 500;
+        timeoutDelay += 750;
       }
     });
 
     // Set the timeout to enter the game over state after all the answers are revealed:
     setTimeout(() => {
       dispatch({ type: "end_game" });
-    }, timeoutDelay + 750);
+    }, timeoutDelay + 1000);
   };
 
   // Fetch question from backend when component mounts:
@@ -138,7 +138,7 @@ export function DailyFeud({ id }: { id: string }) {
     <div className="flex w-full max-w-2xl flex-col items-center gap-4 p-2 text-center">
       {/* The grid implementation probably could use some work. The conditional rendering ensures that the animation starts once the content is actually loaded. */}
       {state.gameStatus === "LOADING" ? (
-        <span>Loading...</span>
+        <span className="animate-bounce dark:text-white">Loading...</span>
       ) : (
         <motion.div
           variants={gameVariants.container}

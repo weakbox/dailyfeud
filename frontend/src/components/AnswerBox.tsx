@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { motion, useAnimate } from "motion/react";
 import { Answer } from "../utils/types";
 
 type AnswerBoxProps = {
@@ -26,15 +28,43 @@ const AnsweredBox = ({ answer }: { answer: Answer }) => (
   </div>
 );
 
-const AnswerBox = ({ index, answer, ...props }: AnswerBoxProps) => (
-  // This ref is required for Motion to work correctly with custom components (took me ages to figure out).
-  <div ref={props.ref}> 
-    {answer.isRevealed ? (
-      <AnsweredBox answer={answer} />
-    ) : (
-      <UnansweredBox index={index} />
-    )}
-  </div>
-);
+export const AnswerBox = ({ index, answer, ...props }: AnswerBoxProps) => {
+  const [scope, animate] = useAnimate();
 
-export default AnswerBox;
+  useEffect(() => {
+    // Docs: https://motion.dev/docs/react-use-animate
+    animate(
+      scope.current,
+      { rotateX: answer.isRevealed ? 180 : 0 },
+      {
+        type: "spring",
+        duration: 0.8,
+        bounce: 0.4,
+      },
+    );
+  }, [answer.isRevealed]);
+
+  return (
+    // This outer div is here to allow staggerChildren to work properly.
+    // Hack solution. Is there a better way?
+    <motion.div ref={props.ref}>
+      <motion.div
+        ref={scope}
+        className="relative perspective-normal transform-3d" // This perspective is NOT WORKING for whatever reason.
+      >
+        <div
+          className="absolute w-full"
+          style={{ backfaceVisibility: "hidden" }}
+        >
+          <UnansweredBox index={index} />
+        </div>
+        <div
+          className="w-full rotate-x-180"
+          style={{ backfaceVisibility: "hidden" }}
+        >
+          <AnsweredBox answer={answer} />
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
