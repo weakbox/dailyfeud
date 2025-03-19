@@ -12,7 +12,6 @@ import { showErrorToast } from "./Utils";
 import { answerVariants, gameVariants } from "../utils/animations";
 import { gameReducer } from "../utils/dailyFeudReducer";
 import { Answer } from "../utils/types";
-import { span } from "motion/react-client";
 
 const MotionAnswerBox = motion.create(AnswerBox);
 
