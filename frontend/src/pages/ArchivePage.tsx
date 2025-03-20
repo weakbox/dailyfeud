@@ -1,45 +1,26 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import { Header, Footer } from "../components/Utils";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { GET_ALL_ANSWER_PROMPTS_URL } from "../utils/api";
-
-const variants = {
-  hidden: {
-    opacity: 0,
-  },
-  visible: {
-    opacity: 1,
-    transition: {
-      duration: 1,
-      staggerChildren: 0.05,
-    },
-  },
-};
-
-const childVariants = {
-  hidden: {
-    x: -100,
-    opacity: 0,
-  },
-  visible: {
-    x: 0,
-    opacity: 1,
-  },
-};
+import { archiveVariants } from "../utils/animations";
 
 type Prompt = {
   id: number;
   prompt: string;
 };
 
-function ArchivePage() {
+export function ArchivePage() {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
 
+  // Fetch all prompts from archive on component mount.
   useEffect(() => {
     const fetchPrompts = async () => {
       try {
         const response = await fetch(GET_ALL_ANSWER_PROMPTS_URL);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         const data = await response.json();
         setPrompts(data);
       } catch (error) {
@@ -53,41 +34,49 @@ function ArchivePage() {
   return (
     <>
       <Header />
-      <main className="flex justify-center">
-        <div className="flex w-full max-w-2xl flex-col items-center gap-4 p-2 text-center">
-          <div className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-b-4 border-black bg-blue-400 px-4 py-2 text-center text-2xl font-black dark:bg-blue-600 dark:text-white">
-            <h1>ARCHIVE</h1>
-          </div>
-          <AnimatePresence>
-            {prompts.length > 0 && (
-              <motion.div
-                className="flex w-full flex-col items-center gap-2"
-                variants={variants}
-                initial="hidden"
-                animate="visible"
-              >
+      {/* No dark-mode support currently (finalizing design). */}
+      <main className="m-2 flex justify-center">
+        {prompts.length === 0 ? (
+          <span className="animate-bounce dark:text-white">Loading...</span>
+        ) : (
+          <motion.div
+            variants={archiveVariants.container}
+            initial="hidden"
+            animate="visible"
+            className="flex w-full max-w-6xl flex-col items-center gap-4 rounded-md border-2 bg-white px-4 pt-1 pb-4"
+          >
+            <table className="w-full">
+              <thead>
+                <tr className="border-b-2 font-bold">
+                  <th className="px-2 py-1">QUESTION</th>
+                  <th className="px-2 py-1">SCORE</th>
+                </tr>
+              </thead>
+              <tbody>
                 {prompts.map((p) => (
-                  <motion.div
-                    key={p.id}
-                    className="w-full rounded-md border-2 border-b-4 border-black bg-white text-center font-bold hover:bg-gray-100 dark:bg-zinc-700 dark:text-white hover:dark:bg-zinc-600"
-                    variants={childVariants}
+                  <tr
+                    key={p.prompt}
+                    className="font-semibold transition odd:bg-rose-200 odd:hover:bg-rose-300 even:hover:bg-gray-100"
                   >
-                    <Link
-                      to={`/question/${p.id}`}
-                      className="block h-full w-full px-2 py-1"
-                    >
-                      {p.prompt.toUpperCase()}
-                    </Link>
-                  </motion.div>
+                    <td>
+                      {/* Display block makes Link take up entire space, so it becomes easier to click. */}
+                      <Link
+                        to={`/${p.id}`}
+                        className="block h-full w-full px-2 py-1 text-left"
+                      >
+                        {p.prompt.toUpperCase()}
+                      </Link>
+                    </td>
+                    {/* Eventually use LocalStorage to save scores so the user knows which questions they have finished. */}
+                    <td className="px-2 py-1 text-center">N/A</td>
+                  </tr>
                 ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+              </tbody>
+            </table>
+          </motion.div>
+        )}
       </main>
       <Footer />
     </>
   );
 }
-
-export default ArchivePage;

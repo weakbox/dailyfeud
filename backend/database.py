@@ -71,6 +71,21 @@ def store_question(question: QuestionModel) -> None:
     con.commit()
     con.close()
 
+def retrieve_latest_question_id() -> int:
+    """
+    Retrieve the latest question ID from the questions table.
+    """
+    with get_connection() as con:
+        cur = con.cursor()
+        cur.execute("""
+            SELECT id FROM questions 
+            ORDER BY id DESC
+            LIMIT 1
+        """)
+        result = cur.fetchone()
+    
+    return str(result[0]) if result else None
+
 def retrieve_question(id: int) -> QuestionModel:
     """
     Retrieve a question, answers, and synonyms from the database.

@@ -1,5 +1,7 @@
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
+export const GET_LATEST_QUESTION_ID_URL = `${BASE_URL}/get-latest-question-id`;
+
 export const getQuestionUrl = (id: string): string => `${BASE_URL}/get-question-prompt/${id}`;
 
 export const getAnswersUrl = (id: string): string => `${BASE_URL}/get-all-answers/${id}`;

@@ -85,3 +85,14 @@ export const modalVariants = {
     exit: { opacity: 0 },
   },
 };
+
+export const archiveVariants = {
+  container: {
+    hidden: {
+      opacity: 0,
+    },
+    visible: {
+      opacity: 1,
+    },
+  },
+};

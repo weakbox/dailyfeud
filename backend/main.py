@@ -29,6 +29,10 @@ async def root() -> None:
         "creator": "Connor McLeod"
     }
 
+@app.get("/get-latest-question-id/")
+async def get_latest_question_id() -> str:
+    return retrieve_latest_question_id()
+
 @app.post("/create-question/")
 async def create_question(request: QuestionRequest) -> QuestionModel:
     """
