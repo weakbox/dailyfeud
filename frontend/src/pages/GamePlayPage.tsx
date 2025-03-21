@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { GET_LATEST_QUESTION_ID_URL } from "../utils/api";
 import { DailyFeud } from "../components/DailyFeud";
-import { Header, Footer } from "../components/Utils";
+import { Header, Footer, showErrorToast } from "../components/Utils";
 import { Toaster } from "react-hot-toast";
 
 type RouteParams = {
@@ -28,6 +28,7 @@ export function GamePlayPage() {
         const data = await response.json();
         setLatestId(data);
       } catch (error) {
+        showErrorToast("Couldn't load latest question ID.");
         console.error("Error fetching latest answer ID:", error);
       }
     };
