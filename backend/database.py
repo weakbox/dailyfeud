@@ -1,6 +1,6 @@
 import sqlite3
 from models import QuestionModel, AnswerModel
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 # !!! At some point we should refactor this to close database cursors.
 
@@ -71,7 +71,7 @@ def store_question(question: QuestionModel) -> None:
     con.commit()
     con.close()
 
-def retrieve_latest_question_id() -> int:
+def retrieve_latest_question_id() -> Optional[str]:
     """
     Retrieve the latest question ID from the questions table.
     """

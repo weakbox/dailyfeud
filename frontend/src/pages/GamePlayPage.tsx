@@ -26,10 +26,15 @@ export function GamePlayPage() {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         const data = await response.json();
-        setLatestId(data);
+
+        if (!data.latest_id) {
+          throw new Error(`There are no questions in the database!`);
+        }
+
+        setLatestId(data.latest_id);
       } catch (error) {
-        showErrorToast("Couldn't load latest question ID.");
-        console.error("Error fetching latest answer ID:", error);
+        showErrorToast(error.message);
+        console.error("Error fetching latest answer ID:", error.message);
       }
     };
 

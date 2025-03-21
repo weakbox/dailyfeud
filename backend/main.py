@@ -9,9 +9,11 @@ from models import QuestionRequest, GuessRequest, QuestionModel
 from typing import List, Dict
 
 load_dotenv()
-allowed_origin = os.getenv("FRONTEND_URL", "*")
 
 app = FastAPI()
+
+allowed_origin = os.getenv("FRONTEND_URL", "*")
+print("Allowing requests from:", allowed_origin)
 
 app.add_middleware(
     CORSMiddleware,
@@ -33,8 +35,10 @@ async def root() -> None:
     }
 
 @app.get("/get-latest-question-id/")
-async def get_latest_question_id() -> str:
-    return retrieve_latest_question_id()
+async def get_latest_question_id() -> Dict[str, Optional[str]]:
+    return {
+        "latest_id": retrieve_latest_question_id()
+    }
 
 @app.post("/create-question/")
 async def create_question(request: QuestionRequest) -> QuestionModel:
