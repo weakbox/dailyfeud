@@ -1,75 +1,72 @@
-import sqlite3
-from models import QuestionModel, AnswerModel
+import os
+import psycopg
 from typing import List, Dict, Optional
+from models import QuestionModel, AnswerModel
 
-# !!! At some point we should refactor this to close database cursors.
-
-DATABASE_PATH = "database.db"
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_connection():
     """
     Get a connection to the database and enable foreign key constraints.
     """
-    con = sqlite3.connect(DATABASE_PATH)
-    con.execute("PRAGMA foreign_keys = 1")
-    return con
+    conn = psycopg.connect(DATABASE_URL)
+
+    # Just for debugging right now!
+    with conn.cursor() as cur:
+        cur.execute("SELECT version()")
+        print(cur.fetchone())
+
+    return conn
 
 def initialize_database() -> None:
     """
     Initialize the database with the required tables if they don't already exist.
     """
-    con = get_connection()
-    cur = con.cursor()
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS questions (
+                    id SERIAL PRIMARY KEY,
+                    question TEXT NOT NULL UNIQUE
+                )
+            """)
+            
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS answers (
+                    id SERIAL PRIMARY KEY,
+                    question_id INTEGER NOT NULL,
+                    position INTEGER NOT NULL,
+                    answer TEXT NOT NULL,
+                    synonyms TEXT[] NOT NULL,
+                    points INTEGER NOT NULL,
+                    FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
+                )
+            """)
 
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS questions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            question TEXT NOT NULL UNIQUE
-        )
-    """)
-    
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS answers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            question_id INTEGER NOT NULL,
-            answer TEXT NOT NULL,
-            points INTEGER NOT NULL DEFAULT 0,
-            position INTEGER NOT NULL DEFAULT 0,
-            FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
-        )
-    """)
-
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS synonyms (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            answer_id INTEGER NOT NULL,
-            synonym TEXT NOT NULL,
-            FOREIGN KEY (answer_id) REFERENCES answers(id) ON DELETE CASCADE
-        )
-    """)
-
-    # CREATE TABLE auto-commits.
-    con.close()
+    print("Database was sucessfully initialized!")
 
 def store_question(question: QuestionModel) -> None:
     """
     Store a question, answers and synonyms in the database.
     """
-    con = get_connection()
-    cur = con.cursor()
+    with get_connection() as conn:
+        with conn.cursor() as cur:
 
-    cur.execute("INSERT INTO questions VALUES(NULL, ?)", (question.question,))
-    question_id = cur.lastrowid
+            question_id = cur.execute("""
+                INSERT INTO questions (question)
+                VALUES (%s)
+                RETURNING id;
+                """, 
+                (question.question,)).fetchone()[0]
 
-    for answer, answer_model in question.answers.items():
-        cur.execute("INSERT INTO answers VALUES(NULL, ?, ?, ?, ?)", (question_id, answer, answer_model.value, answer_model.position))
-        answer_id = cur.lastrowid
+            for answer, answer_model in question.answers.items():
+                cur.execute("""
+                    INSERT INTO answers (question_id, position, answer, synonyms, points)
+                    VALUES (%s, %s, %s, %s, %s);
+                    """, 
+                    (question_id, answer_model.position, answer, answer_model.synonyms, answer_model.value,))
 
-        for synonym in answer_model.synonyms:
-            cur.execute("INSERT INTO synonyms VALUES(NULL, ?, ?)", (answer_id, synonym))
 
-    con.commit()
-    con.close()
 
 def retrieve_latest_question_id() -> Optional[str]:
     """

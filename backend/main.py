@@ -1,12 +1,16 @@
-from fastapi import FastAPI
+import os
+from typing import List, Dict, Optional
+
+import psycopg
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import HTTPException
 from thefuzz import process, fuzz
+
 from answers import *
 from database import *
-from utils import flatten_answer_set
 from models import QuestionRequest, GuessRequest, QuestionModel
-from typing import List, Dict
+from utils import flatten_answer_set
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -23,9 +27,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-initialize_database()
-
-THRESHOLD = 80
+# This is deprecated (fix it later).
+@app.on_event("startup")
+async def startup():
+    initialize_database()
 
 @app.get("/")
 async def root() -> None:
@@ -81,6 +86,7 @@ async def submit_guess(request: GuessRequest) -> dict:
     """
     Submits a guess for a question and returns whether or not it is correct.
     """
+    THRESHOLD = 80
     try:
         question = retrieve_question(request.id)
 
