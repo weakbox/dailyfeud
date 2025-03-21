@@ -8,11 +8,14 @@ from utils import flatten_answer_set
 from models import QuestionRequest, GuessRequest, QuestionModel
 from typing import List, Dict
 
+load_dotenv()
+allowed_origin = os.getenv("FRONTEND_URL", "*")
+
 app = FastAPI()
-origins = ["http://localhost:5173"] # TODO: Configure this later.
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=[allowed_origin],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
