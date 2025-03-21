@@ -7,6 +7,10 @@ def flatten_answer_set(answer_set: Dict[str, AnswerModel]) -> Dict[str, str]:
     """
     flattened_answer_set = {}
     for key, value in answer_set.items():
-        for synonym in value.synonyms:
-            flattened_answer_set[synonym] = key
+        synonyms = value.synonyms
+
+        flattened_answer_set[key] = key
+        for s in synonyms:
+            flattened_answer_set[s] = key
+            
     return flattened_answer_set

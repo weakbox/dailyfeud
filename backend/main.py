@@ -88,16 +88,15 @@ async def submit_guess(request: GuessRequest) -> dict:
     """
     THRESHOLD = 80
     try:
-        question = retrieve_question(request.id)
-
         guess = request.guess.strip().lower()
 
+        question = retrieve_question(request.id)
         answer_set = question.answers
         flat_answer_set = flatten_answer_set(answer_set)
 
         best_match, best_score = process.extractOne(guess, flat_answer_set.keys(), scorer=fuzz.token_set_ratio)
 
-        print("TheFuzz Scoring Opinion: ", f"{guess} -> {best_match}", flat_answer_set[best_match], best_score)
+        print(f"TheFuzz Scoring Opinion: {guess} mapped to {best_match}, which would make the answer: {flat_answer_set[best_match]} {best_score}")
 
         if best_score >= THRESHOLD:
             return {
@@ -110,6 +109,7 @@ async def submit_guess(request: GuessRequest) -> dict:
         return {
             "correct": False,
         }
+    
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
