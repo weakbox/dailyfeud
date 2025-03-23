@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { POST_GUESS_URL } from "../utils/api";
-import { Answer, GameAction, GameState } from "../utils/types";
+import { GameAction, GameState } from "../utils/types";
 
 import correct from "../assets/correct.mp3";
 import wrong from "../assets/wrong.mp3";
@@ -82,6 +82,16 @@ export function GuessForm({ id, state, dispatch }: GuessFormProps) {
     if (!result.correct) {
       dispatch({ type: "add_strike" });
       playSound(wrongRef);
+      return;
+    }
+
+    // Horrific condition.
+    // Could be improved by refactoring position to be zero-indexed.
+    if (state.answers[result.position - 1].isCorrect) {
+      showErrorToast(
+        "Your guess matches an answer that has already been revealed.",
+      );
+      // Ideally this would also shake the matched answer.
       return;
     }
 
