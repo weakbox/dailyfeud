@@ -46,6 +46,7 @@ export const gameReducer = (
     case "end_game": {
       return {
         ...state,
+        guess: "",
         gameStatus: "GAME_OVER",
         resultsModalIsOpen: !state.resultsModalIsOpen,
       };
