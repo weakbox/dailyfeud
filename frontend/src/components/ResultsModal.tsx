@@ -63,9 +63,6 @@ function ResultsModal({
     return null;
   }
 
-  // Make modal completely disappear before background fades out.
-  // And vice-versa.
-
   return createPortal(
     <AnimatePresence>
       {isOpen && (

@@ -158,6 +158,7 @@ def retrieve_all_answers(id: int):
                 SELECT answer, points, position 
                 FROM answers 
                 WHERE question_id = %s
+                ORDER BY position;
                 """,
                 (id,)).fetchall()
 

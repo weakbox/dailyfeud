@@ -74,12 +74,13 @@ export function DailyFeud({ id }: { id: string }) {
     const fetchQuestion = async () => {
       try {
         const response = await fetch(getQuestionUrl(id));
-        const data = await response.json();
 
         if (!response.ok) {
           // Learn more about HTTP errors so this makes more sense.
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
+
+        const data = await response.json();
 
         dispatch({
           type: "init_question",
@@ -118,9 +119,11 @@ export function DailyFeud({ id }: { id: string }) {
     const fetchAnswers = async () => {
       try {
         const response = await fetch(getAnswersUrl(id));
+
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
+
         const data = await response.json();
 
         revealAnswersSequentially(data);
@@ -136,7 +139,8 @@ export function DailyFeud({ id }: { id: string }) {
 
   return (
     <div className="flex w-full max-w-2xl flex-col items-center gap-4 p-2 text-center">
-      {/* The grid implementation probably could use some work. The conditional rendering ensures that the animation starts once the content is actually loaded. */}
+      {/* The grid implementation probably could use some work.
+          The conditional rendering ensures that the animation starts once the content is actually loaded. */}
       {state.gameStatus === "LOADING" ? (
         <span className="animate-bounce dark:text-white">Loading...</span>
       ) : (
